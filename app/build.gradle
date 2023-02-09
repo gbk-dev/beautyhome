@@ -75,6 +75,8 @@ dependencies {
 
     implementation 'com.kizitonwose.calendar:compose:2.0.4'
 
+    implementation "me.onebone:toolbar-compose:2.3.5"
+
     implementation project(path: ':domain')
     implementation project(path: ':data')
 }

@@ -23,6 +23,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.ui.theme.DefBlack
 import com.example.beautyhome.ui.theme.Purple200
 import com.kizitonwose.calendar.compose.HorizontalCalendar
@@ -37,7 +39,7 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("RememberReturnType", "UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun MainScreen(){
+fun MainScreen(navController: NavController){
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) } // Adjust as needed
@@ -61,7 +63,7 @@ fun MainScreen(){
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        TopBar(selections = selections, listDate = listDate)
+        TopBar(selections = selections, listDate = listDate, navController = navController)
         Spacer(modifier = Modifier.height(56.dp))
         HorizontalCalendar(
             state = state,
@@ -96,13 +98,17 @@ fun MainScreen(){
 }
 
 @Composable
-fun TopBar(selections: SnapshotStateList<CalendarDay>, listDate: MutableList<CalendarDay>) {
+fun TopBar(selections: SnapshotStateList<CalendarDay>, listDate: MutableList<CalendarDay>, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
     ) {
-        IconButton(onClick = {}) {
+        IconButton(onClick = {
+            navController.navigate(Screens.Profile.route){
+                popUpTo(Screens.Main.route) { inclusive = true }
+            }
+        }) {
             Icon(imageVector = Icons.Outlined.Person, contentDescription = "profile", tint = Purple200)
         }
         Spacer(Modifier.weight(1f, true))

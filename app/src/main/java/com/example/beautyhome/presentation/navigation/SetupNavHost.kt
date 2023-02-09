@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import com.example.beautyhome.presentation.auth.SignInScreen
 import com.example.beautyhome.presentation.auth.SignUpScreen
 import com.example.beautyhome.presentation.screens.MainScreen
+import com.example.beautyhome.presentation.screens.ProfileScreen
 import com.example.beautyhome.presentation.utils.Constants
 import com.example.beautyhome.presentation.viewmodel.AuthViewModel
 
@@ -17,6 +18,7 @@ sealed class Screens(val route: String){
     object SignIn: Screens(route = Constants.Screens.SIGN_IN_SCREEN)
     object SignUp: Screens(route = Constants.Screens.SIGN_UP_SCREEN)
     object Main: Screens(route = Constants.Screens.MAIN_SCREEN)
+    object Profile: Screens(route = Constants.Screens.PROFILE_SCREEN)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -35,7 +37,10 @@ fun SetupNavHost(navHostController: NavHostController){
             SignUpScreen(viewModel, navController = navHostController)
         }
         composable(route = Screens.Main.route){
-            MainScreen()
+            MainScreen(navController = navHostController)
+        }
+        composable(route = Screens.Profile.route){
+            ProfileScreen(navController = navHostController)
         }
     }
 }
