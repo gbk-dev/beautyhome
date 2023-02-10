@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.beautyhome.R
+import com.example.beautyhome.presentation.navigation.AuthScreens
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.AuthViewModel
 import com.example.beautyhome.presentation.widgets.LoadingScreen
@@ -33,7 +34,8 @@ import com.example.domain.models.User
 @Composable
 fun SignInScreen(
     viewModel: AuthViewModel = viewModel(),
-    navController: NavController
+    navController: NavController,
+    toHomeScreen: () -> Unit
 ){
 
     val email = remember { mutableStateOf("") }
@@ -49,7 +51,7 @@ fun SignInScreen(
 
             is Resource.Success -> {
                 if (stateSignIn.result) {
-                    navController.navigate(Screens.Main.route)
+                    toHomeScreen()
                     Toast.makeText(context, "Успешно", Toast.LENGTH_LONG).show()
                 }
             }
@@ -149,7 +151,7 @@ fun SignInScreen(
             }
             Spacer(modifier = Modifier.height(64.dp))
             TextButton(onClick = {
-                navController.navigate(Screens.SignUp.route)
+                navController.navigate(AuthScreens.SignUp.route)
             }) {
                 Text(text = "Нету аккаунта", color = Color.White)
             }

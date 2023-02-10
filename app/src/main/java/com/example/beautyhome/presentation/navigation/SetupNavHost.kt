@@ -15,8 +15,6 @@ import com.example.beautyhome.presentation.utils.Constants
 import com.example.beautyhome.presentation.viewmodel.AuthViewModel
 
 sealed class Screens(val route: String){
-    object SignIn: Screens(route = Constants.Screens.SIGN_IN_SCREEN)
-    object SignUp: Screens(route = Constants.Screens.SIGN_UP_SCREEN)
     object Main: Screens(route = Constants.Screens.MAIN_SCREEN)
     object Profile: Screens(route = Constants.Screens.PROFILE_SCREEN)
 }
@@ -26,21 +24,10 @@ sealed class Screens(val route: String){
 fun SetupNavHost(navHostController: NavHostController){
     NavHost(
         navController = navHostController,
-        startDestination = Screens.SignIn.route
+        route = Constants.Graph.ROOT,
+        startDestination = Constants.Graph.AUTHENTICATION
     ) {
-        composable(route = Screens.SignIn.route){
-            val viewModel = hiltViewModel<AuthViewModel>()
-            SignInScreen(viewModel, navController = navHostController)
-        }
-        composable(route = Screens.SignUp.route){
-            val viewModel = hiltViewModel<AuthViewModel>()
-            SignUpScreen(viewModel, navController = navHostController)
-        }
-        composable(route = Screens.Main.route){
-            MainScreen(navController = navHostController)
-        }
-        composable(route = Screens.Profile.route){
-            ProfileScreen(navController = navHostController)
-        }
+        authNavGraph(navController = navHostController)
+        homeNavGraph(navController = navHostController)
     }
 }

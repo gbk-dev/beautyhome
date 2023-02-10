@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,14 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.ui.theme.DefBlack
+import com.example.beautyhome.ui.theme.LightPink
 import com.example.beautyhome.ui.theme.Purple200
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
@@ -39,7 +37,9 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("RememberReturnType", "UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun MainScreen(navController: NavController){
+fun MainScreen(
+    navController: NavController
+){
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) } // Adjust as needed
@@ -92,7 +92,7 @@ fun MainScreen(navController: NavController){
                 val daysOfWeek = month.weekDays.first().map { it.date.dayOfWeek }
                 DaysOfWeekTitle(daysOfWeek = daysOfWeek)
             },
-            modifier = Modifier.background(color = Color.White)
+            modifier = Modifier.background(color = LightPink)
         )
     }
 }
@@ -106,7 +106,7 @@ fun TopBar(selections: SnapshotStateList<CalendarDay>, listDate: MutableList<Cal
     ) {
         IconButton(onClick = {
             navController.navigate(Screens.Profile.route){
-                popUpTo(Screens.Main.route) { inclusive = true }
+                popUpTo(Screens.Main.route) { inclusive = false }
             }
         }) {
             Icon(imageVector = Icons.Outlined.Person, contentDescription = "profile", tint = Purple200)

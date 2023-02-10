@@ -26,7 +26,9 @@ import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(
+    navController: NavController
+) {
 
     val state = rememberCollapsingToolbarScaffoldState()
 

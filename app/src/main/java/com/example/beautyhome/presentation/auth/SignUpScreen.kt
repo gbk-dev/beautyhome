@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.beautyhome.R
+import com.example.beautyhome.presentation.navigation.AuthScreens
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.AuthViewModel
 import com.example.beautyhome.presentation.widgets.LoadingScreen
@@ -56,7 +57,7 @@ fun SignUpScreen(
 
             is Resource.Success -> {
                 if (stateSignUp.result) {
-                    navController.navigate(Screens.SignIn.route)
+                    navController.navigate(AuthScreens.SignIn.route)
                     Toast.makeText(context, "Успешно", Toast.LENGTH_LONG).show()
                 }
             }
@@ -241,7 +242,7 @@ fun SignUpScreen(
                 }
                 Spacer(modifier = Modifier.height(64.dp))
                 TextButton(onClick = {
-                    navController.navigate(Screens.SignIn.route)
+                    navController.navigate(AuthScreens.SignIn.route)
                 }) {
                     Text(text = "Уже есть аккаунт", color = Color.White)
                 }
