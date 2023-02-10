@@ -1,6 +1,7 @@
 package com.example.beautyhome.di
 
 import com.example.domain.repository.UserAuthRepository
+import com.example.domain.usecase.LoginUseCase
 import com.example.domain.usecase.SignInUseCase
 import com.example.domain.usecase.SignUpUseCase
 import dagger.Module
@@ -20,6 +21,11 @@ class DomainModule {
     @Provides
     fun provideSignInUseCase(userAuthRepository: UserAuthRepository): SignInUseCase{
         return SignInUseCase(userAuthRepository = userAuthRepository)
+    }
+
+    @Provides
+    fun provideLoginUseCase(userAuthRepository: UserAuthRepository): LoginUseCase{
+        return LoginUseCase(userAuthRepository = userAuthRepository)
     }
 
 }

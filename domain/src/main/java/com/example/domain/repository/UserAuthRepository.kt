@@ -15,4 +15,6 @@ interface UserAuthRepository {
         user: User,
         password: String
     ): Flow<Resource<Boolean>>
+
+    fun login(): Boolean
 }

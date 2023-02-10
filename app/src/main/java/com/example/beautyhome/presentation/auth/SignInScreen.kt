@@ -47,21 +47,29 @@ fun SignInScreen(
 
     LaunchedEffect(stateSignIn) {
 
-        when (stateSignIn) {
+        if (viewModel.login){
+            toHomeScreen()
+        } else {
 
-            is Resource.Success -> {
-                if (stateSignIn.result) {
-                    toHomeScreen()
-                    Toast.makeText(context, "Успешно", Toast.LENGTH_LONG).show()
+            when (stateSignIn) {
+
+                is Resource.Success -> {
+                    if (stateSignIn.result) {
+                        toHomeScreen()
+                        Toast.makeText(context, "Успешно", Toast.LENGTH_LONG).show()
+                    }
                 }
+
+                is Resource.Failure -> {
+                    Toast.makeText(context, stateSignIn.exception, Toast.LENGTH_LONG).show()
+                }
+
+                is Resource.Loading -> Unit
             }
 
-            is Resource.Failure -> {
-                Toast.makeText(context, stateSignIn.exception, Toast.LENGTH_LONG).show()
-            }
-
-            is Resource.Loading -> Unit
         }
+
+
     }
 
     BoxWithConstraints(

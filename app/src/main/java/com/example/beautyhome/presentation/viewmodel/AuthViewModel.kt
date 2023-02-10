@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.models.Resource
 import com.example.domain.models.User
+import com.example.domain.usecase.LoginUseCase
 import com.example.domain.usecase.SignInUseCase
 import com.example.domain.usecase.SignUpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val signUpUseCase: SignUpUseCase,
-    private val signInUseCase: SignInUseCase
+    private val signInUseCase: SignInUseCase,
+    loginUseCase: LoginUseCase
 ) : ViewModel() {
 
     private val _signUpState = mutableStateOf<Resource<Boolean>>(Resource.Success(false))
@@ -24,6 +26,8 @@ class AuthViewModel @Inject constructor(
 
     private val _signInState = mutableStateOf<Resource<Boolean>>(Resource.Success(false))
     val signIn: State<Resource<Boolean>> = _signInState
+
+    val login = loginUseCase.login()
 
     fun signUp(user: User, password: String){
         viewModelScope.launch {

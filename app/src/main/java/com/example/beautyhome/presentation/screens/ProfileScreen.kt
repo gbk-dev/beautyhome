@@ -14,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.beautyhome.R
 import com.example.beautyhome.presentation.navigation.Screens
+import com.example.beautyhome.ui.theme.BeautyHomeTheme
 import com.example.beautyhome.ui.theme.DefBlack
 import com.example.beautyhome.ui.theme.Purple200
 import me.onebone.toolbar.CollapsingToolbarScaffold
@@ -31,75 +33,78 @@ fun ProfileScreen(
 ) {
 
     val state = rememberCollapsingToolbarScaffoldState()
-
-    Column(
-        modifier = Modifier
-            .background(color = DefBlack)
-    ) {
-        Spacer(
+    BeautyHomeTheme{
+        Column(
             modifier = Modifier
-                .height(32.dp)
-        )
-        CollapsingToolbarScaffold(
-            modifier = Modifier,
-            state = state,
-            scrollStrategy = ScrollStrategy.ExitUntilCollapsed,
-            toolbar = {
-
-                val textSize = (18 + (30 - 12) * state.toolbarState.progress).sp
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .pin()
-                        .background(color = Color.Transparent)
-                )
-
-                Image(
-                    modifier= Modifier
-                        .fillMaxSize()
-                        .parallax(),
-                    painter = painterResource(id = R.drawable.ic_profile_image),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    alpha = if (textSize.value == 18f) 0f else 1f
-                )
-
-                IconButton(onClick = {
-                    navController.navigate(Screens.Main.route)
-                }) {
-                    Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = "back to main screen", tint = Purple200)
-                }
-
-                Text(
-                    "Collapsing Toolbar",
-                    style = TextStyle(color = Color.White, fontSize = textSize),
-                    modifier = Modifier
-                        .padding(start = 16.dp, top = 10.dp, bottom = 20.dp)
-                        .road(whenCollapsed = Alignment.TopCenter, whenExpanded = Alignment.BottomStart)
-                )
-
-
-            }
+                .background(color = DefBlack)
         ) {
-
-            LazyColumn(
+            Spacer(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = Color.Transparent)
-            ){
-                items(100){
-                    Card(
-                        modifier= Modifier
+                    .height(32.dp)
+            )
+            CollapsingToolbarScaffold(
+                modifier = Modifier,
+                state = state,
+                scrollStrategy = ScrollStrategy.ExitUntilCollapsed,
+                toolbar = {
+
+                    val textSize = (18 + (30 - 12) * state.toolbarState.progress).sp
+                    Box(
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            text = "This is card number $it",
-                            modifier = Modifier
+                            .height(150.dp)
+                            .pin()
+                            .background(color = Color.Transparent)
+                    )
+
+                    Image(
+                        modifier= Modifier
+                            .fillMaxSize()
+                            .parallax(),
+                        painter = painterResource(id = R.drawable.ic_profile_image),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        alpha = if (textSize.value == 18f) 0f else 1f
+                    )
+
+                    IconButton(onClick = {
+                        navController.navigate(Screens.Main.route)
+                    }) {
+                        Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = "back to main screen", tint = Purple200)
+                    }
+
+                    val text = if (textSize.value != 18f) "Арина Гилязова\narina@gmail.com" else "Арина Гилязова"
+                    Text(
+                        text = text,
+                        style = TextStyle(color = Color.White, fontSize = textSize),
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 10.dp, bottom = 20.dp)
+                            .road(
+                                whenCollapsed = Alignment.TopCenter,
+                                whenExpanded = Alignment.BottomStart
+                            )
+                    )
+                }
+            ) {
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = Color.Transparent)
+                ){
+                    items(100){
+                        Card(
+                            modifier= Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
-                        )
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = "This is card number $it",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -69,4 +69,8 @@ class UserAuthRepositoryImpl: UserAuthRepository {
             emit(Resource.Failure(e.localizedMessage?: "An unexpected error"))
         }
     }
+
+    override fun login(): Boolean {
+        return dbAuth.currentUser?.uid != null
+    }
 }
