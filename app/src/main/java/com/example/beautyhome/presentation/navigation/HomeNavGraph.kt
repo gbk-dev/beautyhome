@@ -3,6 +3,7 @@ package com.example.beautyhome.presentation.navigation
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -11,6 +12,8 @@ import androidx.navigation.navigation
 import com.example.beautyhome.presentation.screens.MainScreen
 import com.example.beautyhome.presentation.screens.ProfileScreen
 import com.example.beautyhome.presentation.utils.Constants
+import com.example.beautyhome.presentation.viewmodel.RecordViewModel
+import com.example.beautyhome.presentation.viewmodel.UserViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -22,12 +25,14 @@ fun NavGraphBuilder.homeNavGraph(navController: NavHostController){
         composable(
             route = Screens.Main.route
         ){
-            MainScreen(navController = navController)
+            val viewModel = hiltViewModel<RecordViewModel>()
+            MainScreen(navController = navController, viewModel = viewModel)
         }
         composable(
             route = Screens.Profile.route
         ){
-            ProfileScreen(navController = navController)
+            val viewModel = hiltViewModel<UserViewModel>()
+            ProfileScreen(navController = navController, viewModel = viewModel)
         }
     }
 }

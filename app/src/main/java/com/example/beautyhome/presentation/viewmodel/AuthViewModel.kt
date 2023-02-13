@@ -8,6 +8,7 @@ import com.example.domain.models.Resource
 import com.example.domain.models.User
 import com.example.domain.usecase.LoginUseCase
 import com.example.domain.usecase.SignInUseCase
+import com.example.domain.usecase.SignOutUseCase
 import com.example.domain.usecase.SignUpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -44,4 +45,5 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
 }

@@ -2,7 +2,6 @@ package com.example.beautyhome.presentation.screens
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.beautyhome.presentation.navigation.Screens
+import com.example.beautyhome.presentation.viewmodel.RecordViewModel
 import com.example.beautyhome.ui.theme.DefBlack
 import com.example.beautyhome.ui.theme.LightPink
 import com.example.beautyhome.ui.theme.Purple200
@@ -33,20 +33,28 @@ import java.time.DayOfWeek
 import java.time.Year
 import java.time.YearMonth
 import java.util.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.beautyhome.presentation.navigation.AuthScreens
+import com.example.domain.models.Record
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.time.timepicker
+import com.vanpra.composematerialdialogs.listItemsSingleChoice
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import com.vanpra.composematerialdialogs.title
+import java.time.LocalTime
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("RememberReturnType", "UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun MainScreen(
+    viewModel: RecordViewModel = viewModel(),
     navController: NavController
 ){
-
     val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(100) } // Adjust as needed
-    val endMonth = remember { currentMonth.plusMonths(100) } // Adjust as needed
-    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() } // Available from the library
+    val startMonth = remember { currentMonth.minusMonths(100) }
+    val endMonth = remember { currentMonth.plusMonths(100) }
+    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
     val selections = remember { mutableStateListOf<CalendarDay>() }
-    val listDate= remember { mutableListOf<CalendarDay>() }
     val scope = rememberCoroutineScope()
 
     val state = rememberCalendarState(
@@ -63,7 +71,7 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        TopBar(selections = selections, listDate = listDate, navController = navController)
+        TopBar(selections = selections, navController = navController, viewModel = viewModel)
         Spacer(modifier = Modifier.height(56.dp))
         HorizontalCalendar(
             state = state,
@@ -74,13 +82,9 @@ fun MainScreen(
                     onClick = { clickDay ->
                         if (selections.contains(clickDay)){
                             selections.remove(clickDay)
-                            listDate.remove(clickDay)
                         } else {
                             selections.add(clickDay)
-                            listDate.add(clickDay)
                         }
-
-                        Log.e("MainScreen", listDate.toString())
                     })
             },
             monthHeader = { month ->
@@ -97,8 +101,13 @@ fun MainScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopBar(selections: SnapshotStateList<CalendarDay>, listDate: MutableList<CalendarDay>, navController: NavController) {
+fun TopBar(
+    selections: SnapshotStateList<CalendarDay>,
+    navController: NavController,
+    viewModel: RecordViewModel
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -113,16 +122,85 @@ fun TopBar(selections: SnapshotStateList<CalendarDay>, listDate: MutableList<Cal
         }
         Spacer(Modifier.weight(1f, true))
 
+        IconButton(onClick = {
+            viewModel.signOut()
+            navController.navigate(AuthScreens.SignIn.route)
+        }) {
+            Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = null)
+        }
+
+        var pickedTime by remember {
+            mutableStateOf(LocalTime.NOON)
+        }
+
+        val timeDialogState = rememberMaterialDialogState()
+        val serviceDialogState = rememberMaterialDialogState()
+
         if (selections.isNotEmpty()){
             IconButton(onClick = {
                 selections.clear()
-                listDate.clear()
             }) {
                 Icon(imageVector = Icons.Outlined.Clear, contentDescription = null, tint = Purple200)
             }
             IconButton(onClick = {
+                serviceDialogState.show()
+            }) {
+                Icon(imageVector = Icons.Outlined.Add, contentDescription = null, tint = Purple200)
+            }
+        }
+        viewModel.getUser()
+        val service = remember { mutableStateOf("") }
+        MaterialDialog(
+            dialogState = serviceDialogState,
+            buttons = {
+                positiveButton(text = "Ok"){
+                    timeDialogState.show()
+                }
+                negativeButton(text = "cancel"){
+                    if (timeDialogState.showing){
+                        timeDialogState.hide()
+                    }
+                }
+            }
+        ) {
+            title(text = "Выберите услугу")
+            listItemsSingleChoice(
+                list = listOf("Брови", "Ресницы", "Ногти"),
+            ) {
+                when (it) {
+                    0 -> service.value = "Брови"
+                    1 -> service.value = "Ресницы"
+                    2 -> service.value = "Ногти"
+                }
+            }
+        }
 
-            }) { Icon(imageVector = Icons.Outlined.Add, contentDescription = null, tint = Purple200) }
+        MaterialDialog(
+            dialogState = timeDialogState,
+            buttons = {
+                positiveButton(text = "Ok") {
+                    val user = viewModel.userList.value
+                    for (i in selections){
+                        val record = Record(
+                            date = i.date.toString(),
+                            time = pickedTime.toString(),
+                            service = service.value,
+                            userName = "${user?.firstName} ${user?.lastName}",
+                            phone = "123"
+                        )
+                        selections.clear()
+                        viewModel.clientRecord(record = record)
+                    }
+                }
+                negativeButton(text = "Cancel")
+            }
+        ) {
+            timepicker(
+                title = "Pick a time",
+                is24HourClock = true
+            ) {
+                pickedTime = it
+            }
         }
     }
 }
@@ -149,7 +227,7 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit) {
             DayPosition.InDate, DayPosition.OutDate -> Color.Gray
         }
         val textDay = day.date.dayOfMonth.toString()
-        val dot = "."
+        //val dot = "."
         Text(
             text = textDay,
             color = textColor,

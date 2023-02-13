@@ -1,9 +1,9 @@
 package com.example.beautyhome.di
 
+import com.example.domain.repository.RecordRepository
 import com.example.domain.repository.UserAuthRepository
-import com.example.domain.usecase.LoginUseCase
-import com.example.domain.usecase.SignInUseCase
-import com.example.domain.usecase.SignUpUseCase
+import com.example.domain.repository.UserRepository
+import com.example.domain.usecase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +26,26 @@ class DomainModule {
     @Provides
     fun provideLoginUseCase(userAuthRepository: UserAuthRepository): LoginUseCase{
         return LoginUseCase(userAuthRepository = userAuthRepository)
+    }
+
+    @Provides
+    fun provideClientRecordUseCase(recordRepository: RecordRepository): ClientRecordUseCase{
+        return ClientRecordUseCase(recordRepository = recordRepository)
+    }
+
+    @Provides
+    fun provideSignOutUseCase(userAuthRepository: UserAuthRepository): SignOutUseCase{
+        return SignOutUseCase(userAuthRepository = userAuthRepository)
+    }
+
+    @Provides
+    fun provideGetUserUseCase(userRepository: UserRepository): GetUserUseCase{
+        return GetUserUseCase(userRepository = userRepository)
+    }
+
+    @Provides
+    fun provideGetRecordUseCase(recordRepository: RecordRepository): GetRecordUseCase{
+        return GetRecordUseCase(recordRepository = recordRepository)
     }
 
 }

@@ -31,7 +31,7 @@ class UserAuthRepositoryImpl: UserAuthRepository {
             if (signUpSuccess){
                 val userId = dbAuth.currentUser?.uid
                 val userDb = User(firstName = user.firstName, lastName = user.lastName, email = user.email, phone = user.phone, uid = userId)
-                db.getReferenceFromUrl("https://beauty-home-18869-default-rtdb.europe-west1.firebasedatabase.app/").child("User/$userId").setValue(userDb).addOnSuccessListener {
+                db.getReference("https://beauty-home-18869-default-rtdb.europe-west1.firebasedatabase.app/").child("Users/$userId").setValue(userDb).addOnSuccessListener {
 
                 }.await()
 
@@ -72,5 +72,9 @@ class UserAuthRepositoryImpl: UserAuthRepository {
 
     override fun login(): Boolean {
         return dbAuth.currentUser?.uid != null
+    }
+
+    override fun signOut() {
+        dbAuth.signOut()
     }
 }

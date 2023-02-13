@@ -17,4 +17,6 @@ interface UserAuthRepository {
     ): Flow<Resource<Boolean>>
 
     fun login(): Boolean
+
+    fun signOut()
 }
