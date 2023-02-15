@@ -7,4 +7,8 @@ interface UserRepository {
 
     fun getUser(): Flow<Result<User>>
 
+    fun uploadImage(imgUri: String)
+
+    suspend fun getImage(): Flow<Result<String>>
+
 }

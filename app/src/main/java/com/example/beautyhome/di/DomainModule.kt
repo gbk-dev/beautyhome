@@ -48,4 +48,14 @@ class DomainModule {
         return GetRecordUseCase(recordRepository = recordRepository)
     }
 
+    @Provides
+    fun provideUploadImgUseCase(userRepository: UserRepository): UploadImgUseCase{
+        return UploadImgUseCase(userRepository = userRepository)
+    }
+
+    @Provides
+    fun provideGetImgUserUseCase(userRepository: UserRepository): GetImgUserUseCase{
+        return GetImgUserUseCase(userRepository = userRepository)
+    }
+
 }
