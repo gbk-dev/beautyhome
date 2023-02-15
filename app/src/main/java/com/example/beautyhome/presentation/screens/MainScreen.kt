@@ -29,9 +29,6 @@ import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.*
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
-import java.time.Year
-import java.time.YearMonth
 import java.util.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.beautyhome.presentation.navigation.AuthScreens
@@ -41,7 +38,8 @@ import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.listItemsSingleChoice
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import com.vanpra.composematerialdialogs.title
-import java.time.LocalTime
+import java.time.*
+import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("RememberReturnType", "UnusedMaterialScaffoldPaddingParameter")
@@ -50,6 +48,7 @@ fun MainScreen(
     viewModel: RecordViewModel = viewModel(),
     navController: NavController
 ){
+    viewModel.getAllRecord()
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
     val endMonth = remember { currentMonth.plusMonths(100) }
@@ -85,7 +84,8 @@ fun MainScreen(
                         } else {
                             selections.add(clickDay)
                         }
-                    })
+                    },
+                    viewModel = viewModel)
             },
             monthHeader = { month ->
                 MonthHeader(month = month, year = Year.now(), onClick = {
@@ -113,13 +113,27 @@ fun TopBar(
             .fillMaxWidth()
             .height(56.dp)
     ) {
-        IconButton(onClick = {
-            navController.navigate(Screens.Profile.route){
-                popUpTo(Screens.Main.route) { inclusive = false }
+        IconButton(
+            onClick = {
+                navController.navigate(Screens.Profile.route){
+                    popUpTo(Screens.Main.route) { inclusive = false }
+                }
             }
-        }) {
+        ) {
             Icon(imageVector = Icons.Outlined.Person, contentDescription = "profile", tint = Purple200)
         }
+        
+        TextButton(
+            onClick = {
+                navController.navigate(Screens.ListOfRecords.route){
+                    popUpTo(Screens.Main.route) { inclusive = false }
+                }
+            }
+        ) {
+            Icon(imageVector = Icons.Outlined.List, contentDescription = null)
+            Text(text = "Список")
+        }
+        
         Spacer(Modifier.weight(1f, true))
 
         IconButton(onClick = {
@@ -180,6 +194,7 @@ fun TopBar(
             buttons = {
                 positiveButton(text = "Ok") {
                     val user = viewModel.userList.value
+                    val today = LocalDate.now()
                     for (i in selections){
                         val record = Record(
                             date = i.date.toString(),
@@ -189,15 +204,23 @@ fun TopBar(
                             phone = "123"
                         )
                         selections.clear()
-                        viewModel.clientRecord(record = record)
+                        if (i.date > today){
+                            viewModel.clientRecord(record = record)
+                        }
                     }
                 }
                 negativeButton(text = "Cancel")
             }
         ) {
+            val startTime = "08:00"
+            val endTime = "22:00"
+            val startTimeFormat = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm"))
+            val endTimeFormat = LocalTime.parse(endTime, DateTimeFormatter.ofPattern("HH:mm"))
+            val range = startTimeFormat..endTimeFormat
             timepicker(
                 title = "Pick a time",
-                is24HourClock = true
+                is24HourClock = true,
+                timeRange = range
             ) {
                 pickedTime = it
             }
@@ -207,7 +230,7 @@ fun TopBar(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit) {
+fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, viewModel: RecordViewModel) {
     Box(
         modifier = Modifier
             .aspectRatio(1f) // This is important for square sizing!
@@ -222,15 +245,23 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit) {
             .clickable(onClick = { onClick(day) }),
         contentAlignment = Alignment.Center
     ) {
-        val textColor = when (day.position) {
-            DayPosition.MonthDate -> if (isSelected) Color.White else Color.Black
-            DayPosition.InDate, DayPosition.OutDate -> Color.Gray
-        }
         val textDay = day.date.dayOfMonth.toString()
-        //val dot = "."
+        val textColor = remember { mutableStateOf(Color.Black) }
+        val listActiveDay = viewModel.allRecordList.value.orEmpty()
+        listActiveDay.forEach {
+            val date = LocalDate.parse(it.date)
+            if (day.date == date){
+                textColor.value = Color.Cyan
+            } else {
+                when (day.position) {
+                    DayPosition.MonthDate -> if (isSelected) textColor.value = Color.White else textColor.value = Color.Black
+                    DayPosition.InDate, DayPosition.OutDate -> textColor.value = Color.Gray
+                }
+            }
+        }
         Text(
             text = textDay,
-            color = textColor,
+            color = textColor.value,
             fontSize = 14.sp,
         )
     }

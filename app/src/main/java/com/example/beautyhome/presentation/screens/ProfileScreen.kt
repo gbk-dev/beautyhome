@@ -9,10 +9,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.magnifier
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +35,7 @@ import com.example.beautyhome.ui.theme.Purple200
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import com.example.beautyhome.presentation.navigation.AuthScreens
 import me.onebone.toolbar.*
 
 @Composable
@@ -106,6 +109,7 @@ fun CustomToolbar(
                         .background(color = Color.Transparent)
                 )
 
+
                 val imgUser = viewModel.img.value.orEmpty()
                 Image(
                     modifier= Modifier
@@ -118,10 +122,31 @@ fun CustomToolbar(
                     alpha = if (textSize.value == 18f) 0f else 1f
                 )
 
-                IconButton(onClick = {
-                    navController.navigate(Screens.Main.route)
-                }) {
-                    Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = "back to main screen", tint = Purple200)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .background(color = Color.Transparent)
+                ) {
+
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screens.Main.route)
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = "back to main screen", tint = Purple200)
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f, true))
+
+                    IconButton(
+                        onClick = {
+                            viewModel.signOut()
+                            navController.navigate(AuthScreens.SignIn.route)
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = null, tint = Purple200)
+                    }
                 }
 
                 val user = viewModel.userList.value
@@ -136,7 +161,9 @@ fun CustomToolbar(
                             whenExpanded = Alignment.BottomStart
                         )
                 )
+
             }
+
         ) {
 
             Column(
@@ -151,7 +178,6 @@ fun CustomToolbar(
                 val service = record?.service
                 val date = record?.date
                 val time = record?.time
-                Log.e("ProfileScreen", record.toString())
 
                 Text(
                     text = userName.orEmpty(),

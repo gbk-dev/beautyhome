@@ -58,4 +58,9 @@ class DomainModule {
         return GetImgUserUseCase(userRepository = userRepository)
     }
 
+    @Provides
+    fun provideGetAllActiveRecords(recordRepository: RecordRepository): GetAllActiveRecordsUseCase{
+        return GetAllActiveRecordsUseCase(recordRepository = recordRepository)
+    }
+
 }

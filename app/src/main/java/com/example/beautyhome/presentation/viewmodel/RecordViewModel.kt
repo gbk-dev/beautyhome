@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.domain.models.Record
 import com.example.domain.models.User
 import com.example.domain.usecase.ClientRecordUseCase
+import com.example.domain.usecase.GetAllActiveRecordsUseCase
 import com.example.domain.usecase.GetUserUseCase
 import com.example.domain.usecase.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,12 +19,18 @@ import javax.inject.Inject
 class RecordViewModel @Inject constructor(
     private val clientRecordUseCase: ClientRecordUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val getUserUseCase: GetUserUseCase
+    private val getUserUseCase: GetUserUseCase,
+    private val getAllActiveRecordsUseCase: GetAllActiveRecordsUseCase
 ) : ViewModel() {
 
     private val _userList = MutableLiveData<User>()
     val userList : LiveData<User> by lazy {
         _userList
+    }
+
+    private val _allRecordsList = MutableLiveData<List<Record>>()
+    val allRecordList : LiveData<List<Record>>by lazy {
+        _allRecordsList
     }
 
     fun clientRecord(record: Record){
@@ -42,6 +49,22 @@ class RecordViewModel @Inject constructor(
                         _userList.postValue(getUserList!!)
                     }
 
+                    it.isFailure -> {
+                        it.exceptionOrNull()?.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
+    fun getAllRecord(){
+        viewModelScope.launch {
+            getAllActiveRecordsUseCase.getAllActiveRecords().collect{
+                when{
+                    it.isSuccess -> {
+                        val getAllRecordList = it.getOrNull()
+                        _allRecordsList.postValue(getAllRecordList!!)
+                    }
                     it.isFailure -> {
                         it.exceptionOrNull()?.printStackTrace()
                     }

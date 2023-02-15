@@ -18,12 +18,14 @@ class RecordRepositoryImpl : RecordRepository {
     private val dbAuth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val uid = dbAuth.currentUser?.uid
-    private lateinit var listener: ValueEventListener
+    private lateinit var listenerRecords: ValueEventListener
+    private lateinit var listenerAllRecords: ValueEventListener
 
     override suspend fun clientRecord(record: Record) {
 
         try {
             db.getReference("Users/$uid/records").setValue(record).await()
+            db.getReference("ActiveRecords/$uid").setValue(record).await()
         }catch (e: Exception){
 
         }
@@ -32,7 +34,7 @@ class RecordRepositoryImpl : RecordRepository {
 
     override fun getRecords(): Flow<Result<Record>> = callbackFlow{
 
-        listener = object : ValueEventListener {
+        listenerRecords = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val record = snapshot.getValue(Record::class.java)
                 this@callbackFlow.trySendBlocking(Result.success(record!!))
@@ -44,7 +46,29 @@ class RecordRepositoryImpl : RecordRepository {
         }
 
         db.getReference("Users/$uid/records")
-            .addValueEventListener(listener)
+            .addValueEventListener(listenerRecords)
+
+        awaitClose {
+
+        }
+    }
+
+    override fun getAllActiveRecords(): Flow<Result<List<Record>>> = callbackFlow {
+        listenerAllRecords = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val allRecord = snapshot.children.map { ds ->
+                    ds.getValue(Record::class.java)
+                }
+                this@callbackFlow.trySendBlocking(Result.success(allRecord.filterNotNull()))
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                this@callbackFlow.trySendBlocking(Result.failure(error.toException()))
+            }
+        }
+
+        db.getReference("ActiveRecords")
+            .addValueEventListener(listenerAllRecords)
 
         awaitClose {
 

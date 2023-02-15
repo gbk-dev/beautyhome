@@ -6,10 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.models.Record
 import com.example.domain.models.User
-import com.example.domain.usecase.GetImgUserUseCase
-import com.example.domain.usecase.GetRecordUseCase
-import com.example.domain.usecase.GetUserUseCase
-import com.example.domain.usecase.UploadImgUseCase
+import com.example.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,7 +16,8 @@ class UserViewModel @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     private val getRecordUseCase: GetRecordUseCase,
     private val uploadImgUseCase: UploadImgUseCase,
-    private val getImgUserUseCase: GetImgUserUseCase
+    private val getImgUserUseCase: GetImgUserUseCase,
+    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
 
     private val _userList = MutableLiveData<User>()
@@ -72,6 +70,10 @@ class UserViewModel @Inject constructor(
 
     fun uploadImg(imgUri: String){
         uploadImgUseCase.uploadImg(imgUri = imgUri)
+    }
+
+    fun signOut(){
+        signOutUseCase.signOut()
     }
 
     fun getImg(){
