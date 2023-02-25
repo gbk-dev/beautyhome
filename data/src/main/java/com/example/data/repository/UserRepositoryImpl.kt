@@ -1,5 +1,6 @@
 package com.example.data.repository
 
+
 import android.util.Log
 import androidx.core.net.toUri
 import com.example.domain.models.User
@@ -9,9 +10,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
@@ -23,15 +22,19 @@ class UserRepositoryImpl : UserRepository {
     private lateinit var listener: ValueEventListener
     private val dbAuth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseDatabase = FirebaseDatabase.getInstance()
-    private val uid = dbAuth.currentUser?.uid
     private val storage = FirebaseStorage.getInstance()
 
     override fun getUser(): Flow<Result<User>> = callbackFlow {
 
+        val uid = dbAuth.currentUser?.uid
+
         listener = object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
                 val user = snapshot.getValue(User::class.java)
-                this@callbackFlow.trySendBlocking(Result.success(user!!))
+                Log.e("UserRepositoryImpl", user.toString())
+                if (user != null){
+                    this@callbackFlow.trySendBlocking(Result.success(user))
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -39,7 +42,8 @@ class UserRepositoryImpl : UserRepository {
             }
         }
 
-        db.getReference("Users/$uid")
+        db.reference
+            .child("Users/$uid")
             .addValueEventListener(listener)
 
         awaitClose {
@@ -48,18 +52,21 @@ class UserRepositoryImpl : UserRepository {
     }
 
     override fun uploadImage(imgUri: String) {
+        val uid = dbAuth.currentUser?.uid
         val img = imgUri.toUri()
         storage.reference.child(uid!!).putFile(img)
     }
 
-    override suspend fun getImage(): Flow<Result<String>> = callbackFlow{
-        val reference = storage.getReference(uid!!)
-        reference.downloadUrl.addOnSuccessListener { uri ->
-            this@callbackFlow.trySendBlocking(Result.success(uri.toString()))
-        }.addOnFailureListener {
-            this@callbackFlow.trySendBlocking(Result.failure(it))
-        }.await()
-
+    override fun getImage(): Flow<Result<String>> = callbackFlow{
+        val uid = dbAuth.currentUser?.uid
+        if (uid != null){
+            val reference = storage.reference.child(uid)
+            reference.downloadUrl.addOnSuccessListener { uri ->
+                this@callbackFlow.trySendBlocking(Result.success(uri.toString()))
+            }.addOnFailureListener {
+                this@callbackFlow.trySendBlocking(Result.failure(it))
+            }
+        }
         awaitClose {
 
         }

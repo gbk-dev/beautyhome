@@ -26,18 +26,17 @@ fun NavGraphBuilder.authNavGraph(navController: NavHostController){
             val viewModel = hiltViewModel<AuthViewModel>()
             SignInScreen(
                 viewModel = viewModel,
-                navController = navController,
-                toHomeScreen = {
-                    navController.popBackStack()
-                    navController.navigate(Constants.Graph.HOME)
-                }
+                navController = navController
             )
         }
         composable(
             route = AuthScreens.SignUp.route
         ){
             val viewModel = hiltViewModel<AuthViewModel>()
-            SignUpScreen(viewModel, navController = navController)
+            SignUpScreen(
+                viewModel = viewModel,
+                navController = navController
+            )
         }
     }
 }

@@ -9,6 +9,6 @@ interface UserRepository {
 
     fun uploadImage(imgUri: String)
 
-    suspend fun getImage(): Flow<Result<String>>
+    fun getImage(): Flow<Result<String>>
 
 }

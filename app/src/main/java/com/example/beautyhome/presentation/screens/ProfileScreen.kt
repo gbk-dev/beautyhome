@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.beautyhome.presentation.navigation.AuthScreens
+import com.example.domain.models.User
 import me.onebone.toolbar.*
 
 @Composable
@@ -44,21 +46,22 @@ fun ProfileScreen(
     navController: NavController
 ) {
 
+    viewModel.getUser()
+    viewModel.getImg()
+    val user = viewModel.userList.value
+    val imgUser = viewModel.img.value
+
     BeautyHomeTheme{
         val state = rememberCollapsingToolbarScaffoldState()
         val scaffoldState = rememberScaffoldState()
-        viewModel.getImg()
-        viewModel.getUser()
 
         Scaffold(
             scaffoldState = scaffoldState,
             floatingActionButton = {
-                var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
                 val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.PickVisualMedia(),
-                    onResult = { uri -> selectedImageUri = uri }
+                    onResult = { uri -> viewModel.uploadImg(uri.toString()) }
                 )
-
                 if ((18 + (30 - 12) * state.toolbarState.progress).sp.value != 18f){
                     FloatingActionButton(onClick = {
                         singlePhotoPickerLauncher.launch(
@@ -68,11 +71,11 @@ fun ProfileScreen(
                         Icon(imageVector = Icons.Outlined.AddCircle, contentDescription = null)
                     }
                 }
-                viewModel.uploadImg(selectedImageUri.toString())
+
             },
             floatingActionButtonPosition = androidx.compose.material.FabPosition.End,
             isFloatingActionButtonDocked = true,
-            topBar = {CustomToolbar(navController = navController, viewModel = viewModel, state = state)},
+            topBar = {CustomToolbar(navController = navController, viewModel = viewModel, state = state, user = user, imgUser = imgUser)},
 
         ) {
             it.calculateTopPadding()
@@ -84,12 +87,15 @@ fun ProfileScreen(
 fun CustomToolbar(
     viewModel: UserViewModel = viewModel(),
     navController: NavController,
-    state: CollapsingToolbarScaffoldState
+    state: CollapsingToolbarScaffoldState,
+    user: User?,
+    imgUser: String?
 ) {
     Column(
         modifier = Modifier
             .background(color = DefBlack)
     ) {
+
         Spacer(
             modifier = Modifier
                 .height(32.dp)
@@ -109,8 +115,6 @@ fun CustomToolbar(
                         .background(color = Color.Transparent)
                 )
 
-
-                val imgUser = viewModel.img.value.orEmpty()
                 Image(
                     modifier= Modifier
                         .fillMaxWidth()
@@ -131,7 +135,7 @@ fun CustomToolbar(
 
                     IconButton(
                         onClick = {
-                            navController.navigate(Screens.Main.route)
+                            navController.navigate(Screens.UserMain.route)
                         }
                     ) {
                         Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = "back to main screen", tint = Purple200)
@@ -148,8 +152,7 @@ fun CustomToolbar(
                         Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = null, tint = Purple200)
                     }
                 }
-
-                val user = viewModel.userList.value
+                Log.e("ProfileScreenUser", user.toString())
                 val text = if (textSize.value != 18f) "${user?.firstName} ${user?.lastName}\n${user?.email}" else "${user?.firstName} ${user?.lastName}"
                 Text(
                     text = text,

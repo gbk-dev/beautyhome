@@ -45,7 +45,7 @@ fun ListOfRecordsScreen(
         ) {
             IconButton(
                 onClick = {
-                    navController.navigate(Screens.Main.route)
+                    navController.navigate(Screens.AdminMain.route)
                 }
             ) {
                 Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = null, tint = Purple200)

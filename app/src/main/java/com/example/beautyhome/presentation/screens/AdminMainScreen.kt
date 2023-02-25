@@ -2,6 +2,7 @@ package com.example.beautyhome.presentation.screens
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.util.toRange
 import androidx.navigation.NavController
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.RecordViewModel
@@ -32,7 +34,9 @@ import kotlinx.coroutines.launch
 import java.util.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.beautyhome.presentation.navigation.AuthScreens
+import com.example.beautyhome.ui.theme.Purple700
 import com.example.domain.models.Record
+import com.example.domain.models.TimeSchedule
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.listItemsSingleChoice
@@ -44,7 +48,7 @@ import java.time.format.DateTimeFormatter
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("RememberReturnType", "UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun MainScreen(
+fun AdminMainScreen(
     viewModel: RecordViewModel = viewModel(),
     navController: NavController
 ){
@@ -55,7 +59,6 @@ fun MainScreen(
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
     val selections = remember { mutableStateListOf<CalendarDay>() }
     val scope = rememberCoroutineScope()
-
     val state = rememberCalendarState(
         startMonth = startMonth,
         endMonth = endMonth,
@@ -70,12 +73,12 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        TopBar(selections = selections, navController = navController, viewModel = viewModel)
+        AdminTopBar(selections = selections, navController = navController, viewModel = viewModel)
         Spacer(modifier = Modifier.height(56.dp))
         HorizontalCalendar(
             state = state,
             dayContent = { day ->
-                Day(
+                AdminDay(
                     day = day,
                     isSelected = selections.contains(day),
                     onClick = { clickDay ->
@@ -85,16 +88,17 @@ fun MainScreen(
                             selections.add(clickDay)
                         }
                     },
-                    viewModel = viewModel)
+                    viewModel = viewModel
+                )
             },
             monthHeader = { month ->
-                MonthHeader(month = month, year = Year.now(), onClick = {
+                AdminMonthHeader(month = month, year = Year.now(), onClick = {
                     scope.launch {
                         state.animateScrollToMonth(it)
                     }
                 })
                 val daysOfWeek = month.weekDays.first().map { it.date.dayOfWeek }
-                DaysOfWeekTitle(daysOfWeek = daysOfWeek)
+                AdminDaysOfWeekTitle(daysOfWeek = daysOfWeek)
             },
             modifier = Modifier.background(color = LightPink)
         )
@@ -103,7 +107,7 @@ fun MainScreen(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopBar(
+fun AdminTopBar(
     selections: SnapshotStateList<CalendarDay>,
     navController: NavController,
     viewModel: RecordViewModel
@@ -116,24 +120,24 @@ fun TopBar(
         IconButton(
             onClick = {
                 navController.navigate(Screens.Profile.route){
-                    popUpTo(Screens.Main.route) { inclusive = false }
+                    popUpTo(Screens.AdminMain.route) { inclusive = false }
                 }
             }
         ) {
             Icon(imageVector = Icons.Outlined.Person, contentDescription = "profile", tint = Purple200)
         }
-        
+
         TextButton(
             onClick = {
                 navController.navigate(Screens.ListOfRecords.route){
-                    popUpTo(Screens.Main.route) { inclusive = false }
+                    popUpTo(Screens.AdminMain.route) { inclusive = false }
                 }
             }
         ) {
             Icon(imageVector = Icons.Outlined.List, contentDescription = null)
             Text(text = "Список")
         }
-        
+
         Spacer(Modifier.weight(1f, true))
 
         IconButton(onClick = {
@@ -143,12 +147,15 @@ fun TopBar(
             Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = null)
         }
 
-        var pickedTime by remember {
+        var pickedFirstTime by remember {
+            mutableStateOf(LocalTime.NOON)
+        }
+        var pickedSecondTime by remember {
             mutableStateOf(LocalTime.NOON)
         }
 
-        val timeDialogState = rememberMaterialDialogState()
-        val serviceDialogState = rememberMaterialDialogState()
+        val firstTimeDialogState = rememberMaterialDialogState()
+        val secondTimeDialogState = rememberMaterialDialogState()
 
         if (selections.isNotEmpty()){
             IconButton(onClick = {
@@ -157,72 +164,55 @@ fun TopBar(
                 Icon(imageVector = Icons.Outlined.Clear, contentDescription = null, tint = Purple200)
             }
             IconButton(onClick = {
-                serviceDialogState.show()
+                firstTimeDialogState.show()
             }) {
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = null, tint = Purple200)
             }
         }
+
         viewModel.getUser()
-        val service = remember { mutableStateOf("") }
+
         MaterialDialog(
-            dialogState = serviceDialogState,
+            dialogState = firstTimeDialogState,
             buttons = {
-                positiveButton(text = "Ok"){
-                    timeDialogState.show()
+                positiveButton(text = "Ok") {
+                    secondTimeDialogState.show()
                 }
-                negativeButton(text = "cancel"){
-                    if (timeDialogState.showing){
-                        timeDialogState.hide()
-                    }
-                }
+                negativeButton(text = "Cancel")
             }
         ) {
-            title(text = "Выберите услугу")
-            listItemsSingleChoice(
-                list = listOf("Брови", "Ресницы", "Ногти"),
+            timepicker(
+                title = "Рабочее время с",
+                is24HourClock = true
             ) {
-                when (it) {
-                    0 -> service.value = "Брови"
-                    1 -> service.value = "Ресницы"
-                    2 -> service.value = "Ногти"
-                }
+                pickedFirstTime = it
             }
         }
 
         MaterialDialog(
-            dialogState = timeDialogState,
+            dialogState = secondTimeDialogState,
             buttons = {
                 positiveButton(text = "Ok") {
-                    val user = viewModel.userList.value
-                    val today = LocalDate.now()
-                    for (i in selections){
-                        val record = Record(
-                            date = i.date.toString(),
-                            time = pickedTime.toString(),
-                            service = service.value,
-                            userName = "${user?.firstName} ${user?.lastName}",
-                            phone = "123"
-                        )
-                        selections.clear()
-                        if (i.date > today){
-                            viewModel.clientRecord(record = record)
+                    val timeRange = pickedFirstTime..pickedSecondTime
+                    selections.forEach {
+                        var time = timeRange.start
+                        val listTime = mutableListOf<String>()
+                        while (time <= timeRange.endInclusive){
+                            listTime.add(time.toString())
+                            time = time.plusHours(1)
                         }
+                        val timeSchedule = TimeSchedule(date = it.date.toString(), time = listTime)
+                        viewModel.setTimeSchedule(timeSchedule)
                     }
                 }
                 negativeButton(text = "Cancel")
             }
         ) {
-            val startTime = "08:00"
-            val endTime = "22:00"
-            val startTimeFormat = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm"))
-            val endTimeFormat = LocalTime.parse(endTime, DateTimeFormatter.ofPattern("HH:mm"))
-            val range = startTimeFormat..endTimeFormat
             timepicker(
-                title = "Pick a time",
-                is24HourClock = true,
-                timeRange = range
+                title = "Рабочее время по",
+                is24HourClock = true
             ) {
-                pickedTime = it
+                pickedSecondTime = it
             }
         }
     }
@@ -230,14 +220,14 @@ fun TopBar(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, viewModel: RecordViewModel) {
+fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, viewModel: RecordViewModel) {
     Box(
         modifier = Modifier
             .aspectRatio(1f) // This is important for square sizing!
             .clip(CircleShape)
             .background(
                 color = if (isSelected) {
-                    Purple200
+                    Purple700
                 } else {
                     Color.Transparent
                 }
@@ -245,11 +235,25 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, v
             .clickable(onClick = { onClick(day) }),
         contentAlignment = Alignment.Center
     ) {
-        val textDay = day.date.dayOfMonth.toString()
+        viewModel.getTimeSchedule()
+        var textDay = day.date.dayOfMonth.toString()
+        var fontSize = 14.sp
         val textColor = remember { mutableStateOf(Color.Black) }
         val listActiveDay = viewModel.allRecordList.value.orEmpty()
-        listActiveDay.forEach {
-            val date = LocalDate.parse(it.date)
+        val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
+        if (timeScheduleList.isNotEmpty()){
+            timeScheduleList.forEach { timeSchedule ->
+                val date = LocalDate.parse(timeSchedule.date)
+                val timeFirst = timeSchedule.time.first()
+                val timeLast = timeSchedule.time.last()
+                if (date == day.date){
+                    textDay = "$textDay\n$timeFirst-$timeLast"
+                    fontSize = 8.sp
+                }
+            }
+        }
+        listActiveDay.forEach { record ->
+            val date = LocalDate.parse(record.date)
             if (day.date == date){
                 textColor.value = Color.Cyan
             } else {
@@ -262,14 +266,14 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, v
         Text(
             text = textDay,
             color = textColor.value,
-            fontSize = 14.sp,
+            fontSize = fontSize,
         )
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
+fun AdminDaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
     Row(modifier = Modifier.fillMaxWidth()) {
         for (dayOfWeek in daysOfWeek) {
             Text(
@@ -284,7 +288,7 @@ fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MonthHeader(month: CalendarMonth, year: Year, onClick: (YearMonth) -> Unit) {
+fun AdminMonthHeader(month: CalendarMonth, year: Year, onClick: (YearMonth) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,

@@ -1,9 +1,11 @@
 package com.example.beautyhome.di
 
 import com.example.data.repository.RecordRepositoryImpl
+import com.example.data.repository.TimeScheduleRepositoryImpl
 import com.example.data.repository.UserAuthRepositoryImpl
 import com.example.data.repository.UserRepositoryImpl
 import com.example.domain.repository.RecordRepository
+import com.example.domain.repository.TimeScheduleRepository
 import com.example.domain.repository.UserAuthRepository
 import com.example.domain.repository.UserRepository
 import dagger.Module
@@ -32,6 +34,12 @@ class DataModule {
     @Singleton
     fun provideUserRepository(): UserRepository{
         return UserRepositoryImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTimeScheduleRepository(): TimeScheduleRepository{
+        return TimeScheduleRepositoryImpl()
     }
 
 }

@@ -8,6 +8,7 @@ import com.example.domain.models.Record
 import com.example.domain.models.User
 import com.example.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,7 +19,10 @@ class UserViewModel @Inject constructor(
     private val uploadImgUseCase: UploadImgUseCase,
     private val getImgUserUseCase: GetImgUserUseCase,
     private val signOutUseCase: SignOutUseCase,
+    loginUseCase: LoginUseCase
 ) : ViewModel() {
+
+    val login = loginUseCase.login()
 
     private val _userList = MutableLiveData<User>()
     val userList : LiveData<User> by lazy {
@@ -36,7 +40,7 @@ class UserViewModel @Inject constructor(
     }
 
     fun getUser(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getUserUseCase.getUser().collect{
                 when{
                     it.isSuccess -> {
@@ -69,7 +73,9 @@ class UserViewModel @Inject constructor(
     }
 
     fun uploadImg(imgUri: String){
-        uploadImgUseCase.uploadImg(imgUri = imgUri)
+        viewModelScope.launch {
+            uploadImgUseCase.uploadImg(imgUri = imgUri)
+        }
     }
 
     fun signOut(){

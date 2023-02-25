@@ -1,5 +1,6 @@
 package com.example.beautyhome.presentation.auth
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -34,29 +35,24 @@ import com.example.domain.models.User
 @Composable
 fun SignInScreen(
     viewModel: AuthViewModel = viewModel(),
-    navController: NavController,
-    toHomeScreen: () -> Unit
+    navController: NavController
 ){
 
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val stateSignIn = viewModel.signIn.value
     val context = LocalContext.current
-
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(stateSignIn) {
 
         if (viewModel.login){
-            toHomeScreen()
+            isMaster(viewModel, navController)
         } else {
-
             when (stateSignIn) {
-
                 is Resource.Success -> {
                     if (stateSignIn.result) {
-                        toHomeScreen()
-                        Toast.makeText(context, "Успешно", Toast.LENGTH_LONG).show()
+                        isMaster(viewModel, navController)
                     }
                 }
 
@@ -66,10 +62,7 @@ fun SignInScreen(
 
                 is Resource.Loading -> Unit
             }
-
         }
-
-
     }
 
     BoxWithConstraints(
@@ -169,4 +162,16 @@ fun SignInScreen(
             LoadingScreen()
     }
 
+}
+
+fun isMaster(viewModel: AuthViewModel, navController: NavController){
+    viewModel.getUser().runCatching {
+        val master = viewModel.userList.value?.master!!
+        Log.e("isMaster", master.toString())
+        if (master){
+            navController.navigate(Screens.AdminMain.route)
+        } else {
+            navController.navigate(Screens.UserMain.route)
+        }
+    }
 }

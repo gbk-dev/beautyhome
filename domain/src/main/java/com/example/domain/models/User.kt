@@ -5,5 +5,6 @@ data class User(
     val lastName: String? = "",
     val email: String? = "",
     val phone: String? = "",
+    val master: Boolean? = null,
     val uid: String? = ""
 )

@@ -37,7 +37,9 @@ class RecordRepositoryImpl : RecordRepository {
         listenerRecords = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val record = snapshot.getValue(Record::class.java)
-                this@callbackFlow.trySendBlocking(Result.success(record!!))
+                if (record != null){
+                    this@callbackFlow.trySendBlocking(Result.success(record))
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {

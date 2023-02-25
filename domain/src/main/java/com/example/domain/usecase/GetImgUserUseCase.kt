@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 class GetImgUserUseCase(private val userRepository: UserRepository) {
 
-    suspend fun getImgUser(): Flow<Result<String>>{
+    fun getImgUser(): Flow<Result<String>>{
         return userRepository.getImage()
     }
 }

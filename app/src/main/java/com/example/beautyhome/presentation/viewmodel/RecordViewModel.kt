@@ -6,11 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.models.Record
+import com.example.domain.models.TimeSchedule
 import com.example.domain.models.User
-import com.example.domain.usecase.ClientRecordUseCase
-import com.example.domain.usecase.GetAllActiveRecordsUseCase
-import com.example.domain.usecase.GetUserUseCase
-import com.example.domain.usecase.SignOutUseCase
+import com.example.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,7 +18,9 @@ class RecordViewModel @Inject constructor(
     private val clientRecordUseCase: ClientRecordUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val getUserUseCase: GetUserUseCase,
-    private val getAllActiveRecordsUseCase: GetAllActiveRecordsUseCase
+    private val getAllActiveRecordsUseCase: GetAllActiveRecordsUseCase,
+    private val getTimeScheduleUseCase: GetTimeScheduleUseCase,
+    private val setTimeScheduleUseCase: SetTimeScheduleUseCase
 ) : ViewModel() {
 
     private val _userList = MutableLiveData<User>()
@@ -29,8 +29,13 @@ class RecordViewModel @Inject constructor(
     }
 
     private val _allRecordsList = MutableLiveData<List<Record>>()
-    val allRecordList : LiveData<List<Record>>by lazy {
+    val allRecordList : LiveData<List<Record>> by lazy {
         _allRecordsList
+    }
+
+    private val _timeScheduleList = MutableLiveData<List<TimeSchedule>>()
+    val timeScheduleList : LiveData<List<TimeSchedule>> by lazy {
+        _timeScheduleList
     }
 
     fun clientRecord(record: Record){
@@ -70,6 +75,28 @@ class RecordViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    fun getTimeSchedule(){
+        viewModelScope.launch {
+            getTimeScheduleUseCase.getTimeSchedule().collect{
+                when{
+                    it.isSuccess -> {
+                        val timeSchedule = it.getOrNull()
+                        _timeScheduleList.postValue(timeSchedule!!)
+                    }
+                    it.isFailure -> {
+                        it.exceptionOrNull()?.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
+    fun setTimeSchedule(timeSchedule: TimeSchedule){
+        viewModelScope.launch {
+            setTimeScheduleUseCase.setTimeSchedule(timeSchedule = timeSchedule)
         }
     }
 

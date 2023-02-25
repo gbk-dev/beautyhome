@@ -24,14 +24,14 @@ class UserAuthRepositoryImpl: UserAuthRepository {
 
         try {
 
-            dbAuth.createUserWithEmailAndPassword(user.email!!, password).addOnSuccessListener {
+            dbAuth.createUserWithEmailAndPassword(user.email.toString(), password).addOnSuccessListener {
                 signUpSuccess = true
             }.await()
 
             if (signUpSuccess){
                 val userId = dbAuth.currentUser?.uid
-                val userDb = User(firstName = user.firstName, lastName = user.lastName, email = user.email, phone = user.phone, uid = userId)
-                db.getReference("https://beauty-home-18869-default-rtdb.europe-west1.firebasedatabase.app/").child("Users/$userId").setValue(userDb).addOnSuccessListener {
+                val userDb = User(firstName = user.firstName, lastName = user.lastName, email = user.email, phone = user.phone, uid = userId, master = false)
+                db.reference.child("Users/$userId").setValue(userDb).addOnCompleteListener {
 
                 }.await()
 
@@ -55,7 +55,7 @@ class UserAuthRepositoryImpl: UserAuthRepository {
 
         try {
 
-            dbAuth.signInWithEmailAndPassword(user.email!!, password).addOnSuccessListener {
+            dbAuth.signInWithEmailAndPassword(user.email.toString(), password).addOnCompleteListener {
                 signInSuccess = true
             }.await()
 
@@ -71,10 +71,10 @@ class UserAuthRepositoryImpl: UserAuthRepository {
     }
 
     override fun login(): Boolean {
-        return dbAuth.currentUser?.uid != null
+        return dbAuth.currentUser != null
     }
 
     override fun signOut() {
-        dbAuth.signOut()
+        return dbAuth.signOut()
     }
 }

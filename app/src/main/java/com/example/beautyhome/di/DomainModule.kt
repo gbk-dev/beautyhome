@@ -1,6 +1,7 @@
 package com.example.beautyhome.di
 
 import com.example.domain.repository.RecordRepository
+import com.example.domain.repository.TimeScheduleRepository
 import com.example.domain.repository.UserAuthRepository
 import com.example.domain.repository.UserRepository
 import com.example.domain.usecase.*
@@ -61,6 +62,16 @@ class DomainModule {
     @Provides
     fun provideGetAllActiveRecords(recordRepository: RecordRepository): GetAllActiveRecordsUseCase{
         return GetAllActiveRecordsUseCase(recordRepository = recordRepository)
+    }
+
+    @Provides
+    fun provideGetTimeScheduleUseCase(timeScheduleRepository: TimeScheduleRepository): GetTimeScheduleUseCase{
+        return GetTimeScheduleUseCase(timeScheduleRepository = timeScheduleRepository)
+    }
+
+    @Provides
+    fun provideSetTimeScheduleUseCase(timeScheduleRepository: TimeScheduleRepository): SetTimeScheduleUseCase{
+        return SetTimeScheduleUseCase(timeScheduleRepository = timeScheduleRepository)
     }
 
 }

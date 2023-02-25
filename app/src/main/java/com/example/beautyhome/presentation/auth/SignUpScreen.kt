@@ -225,7 +225,8 @@ fun SignUpScreen(
                                 val user = User(
                                     firstName = firstName.value,
                                     lastName = lastName.value,
-                                    email = email.value)
+                                    email = email.value
+                                )
                                 viewModel.signUp(user = user, password = password.value)
                             } else {
                                 Toast.makeText(context, "Пароли не совпадают", Toast.LENGTH_SHORT).show()
