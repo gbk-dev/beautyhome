@@ -181,6 +181,7 @@ fun TopBar(
                 }
             }
         }
+        val context = LocalContext.current
 
         MaterialDialog(
             dialogState = timeDialogState,
@@ -189,6 +190,7 @@ fun TopBar(
                     val user = viewModel.userList.value
                     val today = LocalDate.now()
                     val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
+                    val activeRecordList = viewModel.allRecordList.value.orEmpty()
                     if (timeScheduleList.isNotEmpty()){
                         timeScheduleList.forEach { timeSchedule ->
                             val date = LocalDate.parse(timeSchedule.date)
@@ -196,15 +198,35 @@ fun TopBar(
                                 if (date == selectedDate){
                                     timeSchedule.time.forEach { timeScheduleTime ->
                                         if (timeScheduleTime == pickedTime.toString()){
-                                            val record = Record(
-                                                date = selectedDate.toString(),
-                                                time = pickedTime.toString(),
-                                                service = service.value,
-                                                userName = "${user?.firstName} ${user?.lastName}",
-                                                phone = "123"
-                                            )
-                                            if (selectedDate > today){
-                                                viewModel.clientRecord(record = record)
+                                            if (activeRecordList.isNotEmpty()){
+                                                activeRecordList.forEach { activeRecords ->
+                                                    val activeDate = LocalDate.parse(activeRecords.date)
+                                                    if (activeDate == date && activeRecords.time == pickedTime.toString()){
+                                                        Toast.makeText(context, "Это время уже занято", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        val record = Record(
+                                                            date = selectedDate.toString(),
+                                                            time = pickedTime.toString(),
+                                                            service = service.value,
+                                                            userName = "${user?.firstName} ${user?.lastName}",
+                                                            phone = "123"
+                                                        )
+                                                        if (selectedDate > today){
+                                                            viewModel.clientRecord(record = record)
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                val record = Record(
+                                                    date = selectedDate.toString(),
+                                                    time = pickedTime.toString(),
+                                                    service = service.value,
+                                                    userName = "${user?.firstName} ${user?.lastName}",
+                                                    phone = "123"
+                                                )
+                                                if (selectedDate > today){
+                                                    viewModel.clientRecord(record = record)
+                                                }
                                             }
                                         }
                                     }
@@ -218,7 +240,6 @@ fun TopBar(
             }
         ) {
             viewModel.getTimeSchedule()
-            val context = LocalContext.current
             val startTime = remember { mutableStateOf("") }
             val endTime = remember { mutableStateOf("") }
             val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
@@ -230,7 +251,7 @@ fun TopBar(
                 }
             }
             if (startTime.value == "" && endTime.value == ""){
-                Toast.makeText(context, "На этот день нету записи", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "На этот день нету свободных записей", Toast.LENGTH_SHORT).show()
             } else {
                 val startTimeFormat = LocalTime.parse(startTime.value, DateTimeFormatter.ofPattern("HH:mm"))
                 val endTimeFormat = LocalTime.parse(endTime.value, DateTimeFormatter.ofPattern("HH:mm"))
@@ -264,9 +285,23 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, v
             .clickable(onClick = { onClick(day) }),
         contentAlignment = Alignment.Center
     ) {
-        val textDay = day.date.dayOfMonth.toString()
+        viewModel.getTimeSchedule()
+        var textDay = day.date.dayOfMonth.toString()
+        var fontSize = 14.sp
         val textColor = remember { mutableStateOf(Color.Black) }
         val listActiveDay = viewModel.allRecordList.value.orEmpty()
+        val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
+        if (timeScheduleList.isNotEmpty()){
+            timeScheduleList.forEach { timeSchedule ->
+                val date = LocalDate.parse(timeSchedule.date)
+                val timeFirst = timeSchedule.time.first()
+                val timeLast = timeSchedule.time.last()
+                if (date == day.date){
+                    textDay = "$textDay\n$timeFirst-$timeLast"
+                    fontSize = 8.sp
+                }
+            }
+        }
         listActiveDay.forEach {
             val date = LocalDate.parse(it.date)
             if (day.date == date){
@@ -281,7 +316,7 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, v
         Text(
             text = textDay,
             color = textColor.value,
-            fontSize = 14.sp,
+            fontSize = fontSize,
         )
     }
 }

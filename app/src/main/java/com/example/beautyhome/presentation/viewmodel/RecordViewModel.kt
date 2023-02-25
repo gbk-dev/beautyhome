@@ -1,6 +1,5 @@
 package com.example.beautyhome.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -41,7 +40,6 @@ class RecordViewModel @Inject constructor(
     fun clientRecord(record: Record){
         viewModelScope.launch {
             clientRecordUseCase.clientRecord(record = record)
-            Log.e("ViewModel", record.toString())
         }
     }
 

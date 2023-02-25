@@ -1,6 +1,5 @@
 package com.example.data.repository
 
-import android.util.Log
 import com.example.domain.models.TimeSchedule
 import com.example.domain.repository.TimeScheduleRepository
 import com.google.firebase.database.DataSnapshot
@@ -21,7 +20,6 @@ class TimeScheduleRepositoryImpl : TimeScheduleRepository {
     override suspend fun setTimeSchedule(timeSchedule: TimeSchedule) {
 
         val date = timeSchedule.date
-        val time = timeSchedule.time
         db.reference.child("TimeSchedule/$date").setValue(timeSchedule).await()
 
     }
@@ -33,7 +31,6 @@ class TimeScheduleRepositoryImpl : TimeScheduleRepository {
                 val timeSchedule = snapshot.children.map { ds ->
                     ds.getValue(TimeSchedule::class.java)
                 }
-                Log.e("TimeScheduleRepository", timeSchedule.toString())
                 this@callbackFlow.trySendBlocking(Result.success(timeSchedule.filterNotNull()))
             }
 
