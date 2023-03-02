@@ -9,22 +9,28 @@ import com.example.domain.models.TimeSchedule
 import com.example.domain.models.User
 import com.example.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class RecordViewModel @Inject constructor(
     private val clientRecordUseCase: ClientRecordUseCase,
-    private val signOutUseCase: SignOutUseCase,
     private val getUserUseCase: GetUserUseCase,
     private val getAllActiveRecordsUseCase: GetAllActiveRecordsUseCase,
     private val getTimeScheduleUseCase: GetTimeScheduleUseCase,
-    private val setTimeScheduleUseCase: SetTimeScheduleUseCase
+    private val setTimeScheduleUseCase: SetTimeScheduleUseCase,
+    private val getRecordUseCase: GetRecordUseCase
 ) : ViewModel() {
 
-    private val _userList = MutableLiveData<User>()
-    val userList : LiveData<User> by lazy {
-        _userList
+    private val _user = MutableLiveData<User>()
+    val user : LiveData<User> by lazy {
+        _user
+    }
+
+    private val _record = MutableLiveData<Record>()
+    val record : LiveData<Record> by lazy {
+        _record
     }
 
     private val _allRecordsList = MutableLiveData<List<Record>>()
@@ -44,12 +50,12 @@ class RecordViewModel @Inject constructor(
     }
 
     fun getUser(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getUserUseCase.getUser().collect{
                 when{
                     it.isSuccess -> {
                         val getUserList = it.getOrNull()
-                        _userList.postValue(getUserList!!)
+                        _user.postValue(getUserList!!)
                     }
 
                     it.isFailure -> {
@@ -60,8 +66,24 @@ class RecordViewModel @Inject constructor(
         }
     }
 
+    fun getRecord(){
+        viewModelScope.launch(Dispatchers.IO) {
+            getRecordUseCase.getRecord().collect{
+                when{
+                    it.isSuccess -> {
+                        val getRecordList = it.getOrNull()
+                        _record.postValue(getRecordList!!)
+                    }
+                    it.isFailure -> {
+                        it.exceptionOrNull()?.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
     fun getAllRecord(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getAllActiveRecordsUseCase.getAllActiveRecords().collect{
                 when{
                     it.isSuccess -> {
@@ -76,8 +98,8 @@ class RecordViewModel @Inject constructor(
         }
     }
 
-    fun getTimeSchedule(){
-        viewModelScope.launch {
+    fun getTimeScheduleList(){
+        viewModelScope.launch(Dispatchers.IO) {
             getTimeScheduleUseCase.getTimeSchedule().collect{
                 when{
                     it.isSuccess -> {
@@ -96,9 +118,5 @@ class RecordViewModel @Inject constructor(
         viewModelScope.launch {
             setTimeScheduleUseCase.setTimeSchedule(timeSchedule = timeSchedule)
         }
-    }
-
-    fun signOut(){
-        signOutUseCase.signOut()
     }
 }

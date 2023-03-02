@@ -7,12 +7,11 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,17 +23,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.RecordViewModel
-import com.example.beautyhome.ui.theme.DefBlack
-import com.example.beautyhome.ui.theme.LightPink
-import com.example.beautyhome.ui.theme.Purple200
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.*
 import kotlinx.coroutines.launch
 import java.util.*
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.beautyhome.presentation.navigation.AuthScreens
+import com.example.beautyhome.ui.theme.*
 import com.example.domain.models.Record
+import com.example.domain.models.TimeSchedule
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.listItemsSingleChoice
@@ -47,10 +43,9 @@ import java.time.format.DateTimeFormatter
 @SuppressLint("RememberReturnType", "UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun UserMainScreen(
-    viewModel: RecordViewModel = viewModel(),
+    viewModel: RecordViewModel,
     navController: NavController
 ){
-    viewModel.getAllRecord()
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
     val endMonth = remember { currentMonth.plusMonths(100) }
@@ -72,29 +67,42 @@ fun UserMainScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(24.dp))
-        TopBar(selectedDate = selectedDate, navController = navController, viewModel = viewModel)
-        Spacer(modifier = Modifier.height(56.dp))
+        TopBar(
+            selectedDate = selectedDate,
+            navController = navController,
+            viewModel = viewModel
+        )
         HorizontalCalendar(
             state = state,
             dayContent = { day ->
+                viewModel.getTimeScheduleList()
+                viewModel.getRecord()
+                val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
+                val record = viewModel.record.value
                 Day(
                     day = day,
                     isSelected = selectedDate == day.date,
                     onClick = { clickDay ->
                         selectedDate = if (selectedDate == clickDay.date) null else day.date
                     },
-                    viewModel = viewModel)
+                    timeScheduleList = timeScheduleList,
+                    record = record
+                )
             },
             monthHeader = { month ->
-                MonthHeader(month = month, year = Year.now(), onClick = {
-                    scope.launch {
-                        state.animateScrollToMonth(it)
+                MonthHeader(
+                    month = month,
+                    year = Year.now(),
+                    onClick = {
+                        scope.launch {
+                            state.animateScrollToMonth(it)
+                        }
                     }
-                })
+                )
                 val daysOfWeek = month.weekDays.first().map { it.date.dayOfWeek }
                 DaysOfWeekTitle(daysOfWeek = daysOfWeek)
             },
-            modifier = Modifier.background(color = LightPink)
+            modifier = Modifier.background(color = CalendarBack)
         )
     }
 }
@@ -109,9 +117,10 @@ fun TopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(56.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
+        TextButton(
             onClick = {
                 navController.navigate(Screens.Profile.route){
                     popUpTo(Screens.UserMain.route) { inclusive = false }
@@ -119,27 +128,10 @@ fun TopBar(
             }
         ) {
             Icon(imageVector = Icons.Outlined.Person, contentDescription = "profile", tint = Purple200)
-        }
-        
-        TextButton(
-            onClick = {
-                navController.navigate(Screens.ListOfRecords.route){
-                    popUpTo(Screens.UserMain.route) { inclusive = false }
-                }
-            }
-        ) {
-            Icon(imageVector = Icons.Outlined.List, contentDescription = null)
-            Text(text = "Список")
+            Text(text = "Профиль", color = Purple200)
         }
         
         Spacer(Modifier.weight(1f, true))
-
-        IconButton(onClick = {
-            viewModel.signOut()
-            navController.navigate(AuthScreens.SignIn.route)
-        }) {
-            Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = null)
-        }
 
         var pickedTime by remember {
             mutableStateOf(LocalTime.NOON)
@@ -149,9 +141,11 @@ fun TopBar(
         val serviceDialogState = rememberMaterialDialogState()
 
         if (selectedDate != null){
-            IconButton(onClick = {
-                serviceDialogState.show()
-            }) {
+            IconButton(
+                onClick = {
+                    serviceDialogState.show()
+                }
+            ) {
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = null, tint = Purple200)
             }
         }
@@ -187,7 +181,7 @@ fun TopBar(
             dialogState = timeDialogState,
             buttons = {
                 positiveButton(text = "Ok") {
-                    val user = viewModel.userList.value
+                    val user = viewModel.user.value
                     val today = LocalDate.now()
                     val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
                     val activeRecordList = viewModel.allRecordList.value.orEmpty()
@@ -209,10 +203,13 @@ fun TopBar(
                                                             time = pickedTime.toString(),
                                                             service = service.value,
                                                             userName = "${user?.firstName} ${user?.lastName}",
-                                                            phone = "123"
+                                                            phone = user?.phone!!
                                                         )
                                                         if (selectedDate > today){
                                                             viewModel.clientRecord(record = record)
+                                                            Toast.makeText(context, "Вы записались на дату ${record.date} в ${record.time}", Toast.LENGTH_SHORT).show()
+                                                        } else {
+                                                            Toast.makeText(context, "На этот день уже нельзя записаться", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
                                                 }
@@ -222,10 +219,13 @@ fun TopBar(
                                                     time = pickedTime.toString(),
                                                     service = service.value,
                                                     userName = "${user?.firstName} ${user?.lastName}",
-                                                    phone = "123"
+                                                    phone = user?.phone!!
                                                 )
                                                 if (selectedDate > today){
                                                     viewModel.clientRecord(record = record)
+                                                    Toast.makeText(context, "Вы записались на дату ${record.date} в ${record.time}", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, "На этот день уже нельзя записаться", Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                         }
@@ -234,30 +234,31 @@ fun TopBar(
                             }
                         }
                     }
-
                 }
                 negativeButton(text = "Cancel")
             }
         ) {
-            viewModel.getTimeSchedule()
+            viewModel.getTimeScheduleList()
             val startTime = remember { mutableStateOf("") }
             val endTime = remember { mutableStateOf("") }
             val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
             if (timeScheduleList.isNotEmpty()){
                 timeScheduleList.forEach { timeSchedule ->
-                    startTime.value = timeSchedule.time.first()
-                    endTime.value = timeSchedule.time.last()
-
+                    val date = LocalDate.parse(timeSchedule.date)
+                    if (selectedDate == date){
+                        startTime.value = timeSchedule.time.first()
+                        endTime.value = timeSchedule.time.last()
+                    }
                 }
             }
             if (startTime.value == "" && endTime.value == ""){
-                Toast.makeText(context, "На этот день нету свободных записей", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Не рабочий день", Toast.LENGTH_SHORT).show()
             } else {
                 val startTimeFormat = LocalTime.parse(startTime.value, DateTimeFormatter.ofPattern("HH:mm"))
                 val endTimeFormat = LocalTime.parse(endTime.value, DateTimeFormatter.ofPattern("HH:mm"))
                 val range = startTimeFormat..endTimeFormat
                 timepicker(
-                    title = "Pick a time",
+                    title = "Выберете время",
                     is24HourClock = true,
                     timeRange = range
                 ) {
@@ -270,54 +271,87 @@ fun TopBar(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, viewModel: RecordViewModel) {
+fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, timeScheduleList: List<TimeSchedule>, record: Record?) {
+    var textDayTime = ""
+    var isWorkDay = false
+    val textColor = remember { mutableStateOf(darkWhite) }
+    val today = LocalDate.now()
+    if (timeScheduleList.isNotEmpty()){
+        timeScheduleList.forEach { timeSchedule ->
+            val date = LocalDate.parse(timeSchedule.date)
+            val timeFirst = timeSchedule.time.first()
+            val timeLast = timeSchedule.time.last()
+            if (date == day.date && today <= date){
+                isWorkDay = true
+                textDayTime = "$timeFirst\n$timeLast"
+            }
+        }
+    }
+
+    when (day.position) {
+        DayPosition.MonthDate -> {
+            if (record != null){
+                val date = LocalDate.parse(record.date)
+                if (today <= date && date == day.date && !isSelected){
+                    textColor.value = Purple
+                } else if (today <= date && date == day.date && isSelected) {
+                    textColor.value = DefBlack
+                } else {
+                    textColor.value = darkWhite
+                }
+            } else {
+                if (isSelected) {
+                    textColor.value = DefBlack
+                } else {
+                    textColor.value = darkWhite
+                }
+            }
+        }
+        DayPosition.InDate, DayPosition.OutDate -> textColor.value = Color.Gray
+    }
+
     Box(
         modifier = Modifier
-            .aspectRatio(1f) // This is important for square sizing!
-            .clip(CircleShape)
-            .background(
-                color = if (isSelected) {
-                    Purple200
-                } else {
-                    Color.Transparent
-                }
-            )
-            .clickable(onClick = { onClick(day) }),
-        contentAlignment = Alignment.Center
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(color = if (isSelected) Purple else Color.Transparent)
+            .clickable(onClick = { onClick(day) })
     ) {
-        viewModel.getTimeSchedule()
-        var textDay = day.date.dayOfMonth.toString()
-        var fontSize = 14.sp
-        val textColor = remember { mutableStateOf(Color.Black) }
-        val listActiveDay = viewModel.allRecordList.value.orEmpty()
-        val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
-        if (timeScheduleList.isNotEmpty()){
-            timeScheduleList.forEach { timeSchedule ->
-                val date = LocalDate.parse(timeSchedule.date)
-                val timeFirst = timeSchedule.time.first()
-                val timeLast = timeSchedule.time.last()
-                if (date == day.date){
-                    textDay = "$textDay\n$timeFirst-$timeLast"
-                    fontSize = 8.sp
-                }
+
+        if (isWorkDay){
+            Box(
+                modifier = Modifier
+                    .aspectRatio(1f),
+                contentAlignment = Alignment.TopStart
+            ) {
+                Text(
+                    text = day.date.dayOfMonth.toString(),
+                    color = textColor.value,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(8.dp)
+                )
             }
-        }
-        listActiveDay.forEach {
-            val date = LocalDate.parse(it.date)
-            if (day.date == date){
-                textColor.value = Color.Cyan
-            } else {
-                when (day.position) {
-                    DayPosition.MonthDate -> if (isSelected) textColor.value = Color.White else textColor.value = Color.Black
-                    DayPosition.InDate, DayPosition.OutDate -> textColor.value = Color.Gray
-                }
+            Box(
+                modifier = Modifier
+                    .aspectRatio(1f),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                Text(
+                    text = textDayTime,
+                    color = textColor.value,
+                    fontSize = 10.sp,
+                    modifier = Modifier.padding(bottom = 2.dp, end = 2.dp)
+                )
             }
+
+        } else {
+            Text(
+                text = day.date.dayOfMonth.toString(),
+                color = textColor.value,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(8.dp)
+            )
         }
-        Text(
-            text = textDay,
-            color = textColor.value,
-            fontSize = fontSize,
-        )
     }
 }
 
@@ -330,7 +364,7 @@ fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center,
                 text = dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.getDefault()),
-                color = Color.Black
+                color = darkWhite
             )
         }
     }
@@ -350,16 +384,16 @@ fun MonthHeader(month: CalendarMonth, year: Year, onClick: (YearMonth) -> Unit) 
         IconButton(onClick = {
             onClick(month.yearMonth.minusMonths(1))
         }) {
-            Icon(imageVector = leftArrow, contentDescription = null)
+            Icon(imageVector = leftArrow, contentDescription = null, tint = Purple200)
         }
         Text(
             text = "$monthLocale, ${year.atMonth(month.yearMonth.month)}",
-            color = Color.Black
+            color = darkWhite
         )
         IconButton(onClick = {
             onClick(month.yearMonth.plusMonths(1))
         }) {
-            Icon(imageVector = rightArrow, contentDescription = null)
+            Icon(imageVector = rightArrow, contentDescription = null, tint = Purple200)
         }
     }
 }

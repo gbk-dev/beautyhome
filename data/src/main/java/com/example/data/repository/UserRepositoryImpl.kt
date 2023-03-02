@@ -1,7 +1,6 @@
 package com.example.data.repository
 
 
-import android.util.Log
 import androidx.core.net.toUri
 import com.example.domain.models.User
 import com.example.domain.repository.UserRepository
@@ -11,11 +10,12 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class UserRepositoryImpl : UserRepository {
 
@@ -28,17 +28,18 @@ class UserRepositoryImpl : UserRepository {
 
         val uid = dbAuth.currentUser?.uid
 
-        listener = object : ValueEventListener{
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val user = snapshot.getValue(User::class.java)
-                Log.e("UserRepositoryImpl", user.toString())
-                if (user != null){
-                    this@callbackFlow.trySendBlocking(Result.success(user))
+        withContext(Dispatchers.Default) {
+            listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val user = snapshot.getValue(User::class.java)
+                    if (user != null) {
+                        this@callbackFlow.trySendBlocking(Result.success(user))
+                    }
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                this@callbackFlow.trySendBlocking(Result.failure(error.toException()))
+                override fun onCancelled(error: DatabaseError) {
+                    this@callbackFlow.trySendBlocking(Result.failure(error.toException()))
+                }
             }
         }
 

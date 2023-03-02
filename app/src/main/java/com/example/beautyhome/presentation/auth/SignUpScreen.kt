@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ fun SignUpScreen(
     val firstName = remember { mutableStateOf("") }
     val lastName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
+    val phone = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
     val stateSignUp = viewModel.signUp.value
@@ -88,8 +90,8 @@ fun SignUpScreen(
                         firstName.value = it
                     },
                     singleLine = true,
-                    label = { Text(text = "First name", color = Color.White) },
-                    placeholder = { Text(text = "Type your first name") },
+                    label = { Text(text = "Имя", color = Color.White) },
+                    placeholder = { Text(text = "Введите свое имя") },
                     leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Person Icon") },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         capitalization = KeyboardCapitalization.Sentences,
@@ -107,8 +109,8 @@ fun SignUpScreen(
                         lastName.value = it
                     },
                     singleLine = true,
-                    label = { Text(text = "Last name", color = Color.White) },
-                    placeholder = { Text(text = "Type your last name") },
+                    label = { Text(text = "Фамилия", color = Color.White) },
+                    placeholder = { Text(text = "Введите свою фамилию") },
                     leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Person Icon") },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         capitalization = KeyboardCapitalization.Sentences,
@@ -127,12 +129,32 @@ fun SignUpScreen(
                     },
                     singleLine = true,
                     label = { Text(text = "Email", color = Color.White) },
-                    placeholder = { Text(text = "Type your email") },
+                    placeholder = { Text(text = "Введите свой email") },
                     leadingIcon = { Icon(imageVector = Icons.Outlined.Email, contentDescription = "Email Icon") },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         capitalization = KeyboardCapitalization.Sentences,
                         autoCorrect = true,
                         keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                    })
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                TextField(
+                    value = phone.value,
+                    onValueChange = {
+                        phone.value = it
+                    },
+                    singleLine = true,
+                    label = { Text(text = "Телефон", color = Color.White) },
+                    placeholder = { Text(text = "Введите свой номер телефона") },
+                    leadingIcon = { Icon(imageVector = Icons.Outlined.Phone, contentDescription = "Phone Icon") },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        autoCorrect = true,
+                        keyboardType = KeyboardType.Phone,
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(onDone = {
@@ -147,8 +169,8 @@ fun SignUpScreen(
                         password.value = it
                     },
                     singleLine = true,
-                    label = { Text(text = "Password", color = Color.White) },
-                    placeholder = { Text(text = "Type your password") },
+                    label = { Text(text = "Пароль", color = Color.White) },
+                    placeholder = { Text(text = "Введите свой пароль") },
                     visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, contentDescription = "Password Icon") },
                     trailingIcon = {
@@ -180,8 +202,8 @@ fun SignUpScreen(
                         confirmPassword.value = it
                     },
                     singleLine = true,
-                    label = { Text(text = "Confirm password", color = Color.White) },
-                    placeholder = { Text(text = "Repeat your password") },
+                    label = { Text(text = "Подтвердить пароль", color = Color.White) },
+                    placeholder = { Text(text = "Повторите свой пароль") },
                     visualTransformation = if (confirmPasswordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, contentDescription = "Password Icon") },
                     trailingIcon = {
@@ -215,17 +237,20 @@ fun SignUpScreen(
             ) {
                 OutlinedButton(
                     onClick = {
-                        if (firstName.value.isNotEmpty()
+                        if (
+                            firstName.value.isNotEmpty()
                             && lastName.value.isNotEmpty()
                             && email.value.isNotEmpty()
+                            && phone.value.isNotEmpty()
                             && password.value.isNotEmpty()
-                            && confirmPassword.value.isNotEmpty()){
-
+                            && confirmPassword.value.isNotEmpty()
+                        ) {
                             if (password.value == confirmPassword.value){
                                 val user = User(
                                     firstName = firstName.value,
                                     lastName = lastName.value,
-                                    email = email.value
+                                    email = email.value,
+                                    phone = phone.value
                                 )
                                 viewModel.signUp(user = user, password = password.value)
                             } else {
@@ -242,9 +267,11 @@ fun SignUpScreen(
                     Text(text = "Зарегистрироваться")
                 }
                 Spacer(modifier = Modifier.height(64.dp))
-                TextButton(onClick = {
-                    navController.navigate(AuthScreens.SignIn.route)
-                }) {
+                TextButton(
+                    onClick = {
+                        navController.navigate(AuthScreens.SignIn.route)
+                    }
+                ) {
                     Text(text = "Уже есть аккаунт", color = Color.White)
                 }
             }

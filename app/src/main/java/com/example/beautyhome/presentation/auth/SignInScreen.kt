@@ -1,6 +1,5 @@
 package com.example.beautyhome.presentation.auth
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,7 +19,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.beautyhome.R
 import com.example.beautyhome.presentation.navigation.AuthScreens
@@ -34,7 +32,7 @@ import com.example.domain.models.User
 
 @Composable
 fun SignInScreen(
-    viewModel: AuthViewModel = viewModel(),
+    viewModel: AuthViewModel,
     navController: NavController
 ){
 
@@ -45,23 +43,27 @@ fun SignInScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(stateSignIn) {
-
-        if (viewModel.login){
-            isMaster(viewModel, navController)
-        } else {
-            when (stateSignIn) {
-                is Resource.Success -> {
-                    if (stateSignIn.result) {
-                        isMaster(viewModel, navController)
+        when (stateSignIn) {
+            is Resource.Success -> {
+                if (stateSignIn.result) {
+                    viewModel.getUser().runCatching {
+                        val master = viewModel.user.value?.master
+                        if (master!!){
+                            navController.navigate(Screens.AdminMain.route)
+                            Toast.makeText(context, "Успешно вошли как мастер", Toast.LENGTH_LONG).show()
+                        } else {
+                            navController.navigate(Screens.UserMain.route)
+                            Toast.makeText(context, "Успешно", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
-
-                is Resource.Failure -> {
-                    Toast.makeText(context, stateSignIn.exception, Toast.LENGTH_LONG).show()
-                }
-
-                is Resource.Loading -> Unit
             }
+
+            is Resource.Failure -> {
+                Toast.makeText(context, stateSignIn.exception, Toast.LENGTH_LONG).show()
+            }
+
+            is Resource.Loading -> Unit
         }
     }
 
@@ -82,7 +84,7 @@ fun SignInScreen(
                 },
                 singleLine = true,
                 label = { Text(text = "Email", color = Color.White) },
-                placeholder = { Text(text = "Type your email") },
+                placeholder = { Text(text = "Введите свой email") },
                 leadingIcon = { Icon(imageVector = Icons.Outlined.Email, contentDescription = "Email Icon") },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     capitalization = KeyboardCapitalization.Sentences,
@@ -103,8 +105,8 @@ fun SignInScreen(
                     password.value = it
                 },
                 singleLine = true,
-                label = { Text(text = "Password", color = Color.White) },
-                placeholder = { Text(text = "Type your password") },
+                label = { Text(text = "Пароль", color = Color.White) },
+                placeholder = { Text(text = "Введите свой пароль") },
                 visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, contentDescription = "Password Icon") },
                 trailingIcon = {
@@ -162,16 +164,4 @@ fun SignInScreen(
             LoadingScreen()
     }
 
-}
-
-fun isMaster(viewModel: AuthViewModel, navController: NavController){
-    viewModel.getUser().runCatching {
-        val master = viewModel.userList.value?.master!!
-        Log.e("isMaster", master.toString())
-        if (master){
-            navController.navigate(Screens.AdminMain.route)
-        } else {
-            navController.navigate(Screens.UserMain.route)
-        }
-    }
 }

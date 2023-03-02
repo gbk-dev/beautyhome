@@ -18,20 +18,17 @@ class UserViewModel @Inject constructor(
     private val getRecordUseCase: GetRecordUseCase,
     private val uploadImgUseCase: UploadImgUseCase,
     private val getImgUserUseCase: GetImgUserUseCase,
-    private val signOutUseCase: SignOutUseCase,
-    loginUseCase: LoginUseCase
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
 
-    val login = loginUseCase.login()
-
-    private val _userList = MutableLiveData<User>()
-    val userList : LiveData<User> by lazy {
-        _userList
+    private val _user = MutableLiveData<User>()
+    val user : LiveData<User> by lazy {
+        _user
     }
 
-    private val _recordList = MutableLiveData<Record>()
-    val recordList : LiveData<Record> by lazy {
-        _recordList
+    private val _record = MutableLiveData<Record>()
+    val record : LiveData<Record> by lazy {
+        _record
     }
 
     private val _img = MutableLiveData<String>()
@@ -45,7 +42,7 @@ class UserViewModel @Inject constructor(
                 when{
                     it.isSuccess -> {
                         val getUserList = it.getOrNull()
-                        _userList.postValue(getUserList!!)
+                        _user.postValue(getUserList!!)
                     }
 
                     it.isFailure -> {
@@ -57,12 +54,12 @@ class UserViewModel @Inject constructor(
     }
 
     fun getRecord(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getRecordUseCase.getRecord().collect{
                 when{
                     it.isSuccess -> {
                         val getRecordList = it.getOrNull()
-                        _recordList.postValue(getRecordList!!)
+                        _record.postValue(getRecordList!!)
                     }
                     it.isFailure -> {
                         it.exceptionOrNull()?.printStackTrace()
@@ -83,7 +80,7 @@ class UserViewModel @Inject constructor(
     }
 
     fun getImg(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getImgUserUseCase.getImgUser().collect{
                 when{
                     it.isSuccess -> {

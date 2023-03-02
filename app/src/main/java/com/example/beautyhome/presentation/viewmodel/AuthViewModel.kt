@@ -10,7 +10,7 @@ import com.example.domain.models.Resource
 import com.example.domain.models.User
 import com.example.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,26 +22,30 @@ class AuthViewModel @Inject constructor(
     loginUseCase: LoginUseCase
 ) : ViewModel() {
 
-    private val _userList = MutableLiveData<User>()
-    val userList : LiveData<User> by lazy {
-        _userList
+    private val _user = MutableLiveData<User>()
+    val user : LiveData<User> by lazy {
+        _user
     }
 
     private val _signUpState = mutableStateOf<Resource<Boolean>>(Resource.Success(false))
-    val signUp: State<Resource<Boolean>> = _signUpState
+    val signUp: State<Resource<Boolean>> by lazy {
+        _signUpState
+    }
 
     private val _signInState = mutableStateOf<Resource<Boolean>>(Resource.Success(false))
-    val signIn: State<Resource<Boolean>> = _signInState
+    val signIn: State<Resource<Boolean>> by lazy {
+        _signInState
+    }
 
     val login = loginUseCase.login()
 
     fun getUser(){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getUserUseCase.getUser().collect{
                 when{
                     it.isSuccess -> {
                         val getUserList = it.getOrNull()
-                        _userList.postValue(getUserList!!)
+                        _user.postValue(getUserList!!)
                     }
 
                     it.isFailure -> {
@@ -67,5 +71,4 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-
 }

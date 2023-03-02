@@ -1,5 +1,7 @@
 package com.example.beautyhome.presentation.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,13 +24,18 @@ import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.RecordViewModel
 import com.example.beautyhome.ui.theme.DefBlack
 import com.example.beautyhome.ui.theme.Purple200
-import com.example.beautyhome.ui.theme.Purple500
+import java.time.LocalDate
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ListOfRecordsScreen(
     navController: NavController,
     viewModel: RecordViewModel
 ) {
+
+    viewModel.getUser()
+    val user = viewModel.user.value
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,15 +52,17 @@ fun ListOfRecordsScreen(
         ) {
             IconButton(
                 onClick = {
-                    navController.navigate(Screens.AdminMain.route)
+                    if (user?.master!!){
+                        navController.navigate(Screens.AdminMain.route)
+                    } else {
+                        navController.navigate(Screens.UserMain.route)
+                    }
                 }
             ) {
                 Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = null, tint = Purple200)
             }
-
             Text(text = "Список активных записей", color = Purple200)
         }
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,24 +70,33 @@ fun ListOfRecordsScreen(
         ){
             viewModel.getAllRecord()
             val recordsList = viewModel.allRecordList.value.orEmpty()
-            items(recordsList){ records ->
-                val data = records.date
-                val userName = records.userName
-                val time = records.time
-                val service = records.service
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .background(color = Color.Transparent),
-                    border = BorderStroke(1.dp, Purple200),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Text(text = "Пользователь - $userName", modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp, end = 16.dp))
-                        Text(text = "Услуга - $service", modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 16.dp))
-                        Text(text = "Дата - $data", modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 16.dp))
-                        Text(text = "Время - $time", modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 16.dp, end = 16.dp))
+            if (recordsList.isNotEmpty()){
+                recordsList.forEach { record ->
+                    val today = LocalDate.now()
+                    val dateRecord = LocalDate.parse(record.date)
+                    if (today <= dateRecord){
+                        val list = listOf(record)
+                        items(list){ records ->
+                            val data = records.date
+                            val userName = records.userName
+                            val time = records.time
+                            val service = records.service
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .background(color = Color.Transparent),
+                                border = BorderStroke(1.dp, Purple200),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    Text(text = "Пользователь - $userName", modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp, end = 16.dp))
+                                    Text(text = "Услуга - $service", modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 16.dp))
+                                    Text(text = "Дата - $data", modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 16.dp))
+                                    Text(text = "Время - $time", modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 16.dp, end = 16.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }

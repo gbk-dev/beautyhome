@@ -24,7 +24,6 @@ class RecordRepositoryImpl : RecordRepository {
     override suspend fun clientRecord(record: Record) {
 
         try {
-            db.getReference("Users/$uid/records").setValue(record).await()
             db.getReference("ActiveRecords/$uid").setValue(record).await()
         }catch (e: Exception){
 
@@ -47,7 +46,8 @@ class RecordRepositoryImpl : RecordRepository {
             }
         }
 
-        db.getReference("Users/$uid/records")
+        db.reference
+            .child("ActiveRecords/$uid")
             .addValueEventListener(listenerRecords)
 
         awaitClose {
@@ -69,7 +69,8 @@ class RecordRepositoryImpl : RecordRepository {
             }
         }
 
-        db.getReference("ActiveRecords")
+        db.reference
+            .child("ActiveRecords")
             .addValueEventListener(listenerAllRecords)
 
         awaitClose {

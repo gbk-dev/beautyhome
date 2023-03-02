@@ -1,13 +1,13 @@
 package com.example.beautyhome.presentation.screens
 
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
@@ -21,15 +21,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.beautyhome.presentation.navigation.AuthScreens
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.UserViewModel
-import com.example.beautyhome.ui.theme.BeautyHomeTheme
-import com.example.beautyhome.ui.theme.DefBlack
-import com.example.beautyhome.ui.theme.Purple200
+import com.example.beautyhome.ui.theme.*
+import com.example.domain.models.Record
 import com.example.domain.models.User
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.CollapsingToolbarScaffoldState
@@ -38,18 +36,21 @@ import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 
 @Composable
 fun ProfileScreen(
-    viewModel: UserViewModel = viewModel(),
+    viewModel: UserViewModel,
     navController: NavController
 ) {
 
-    viewModel.getUser()
-    viewModel.getImg()
-    val user = viewModel.userList.value
-    val imgUser = viewModel.img.value
-
     BeautyHomeTheme{
+        viewModel.getUser()
+        viewModel.getImg()
+        viewModel.getRecord()
+
         val state = rememberCollapsingToolbarScaffoldState()
         val scaffoldState = rememberScaffoldState()
+
+        val user = viewModel.user.value
+        val imgUser = viewModel.img.value
+        val record = viewModel.record.value
 
         Scaffold(
             scaffoldState = scaffoldState,
@@ -69,9 +70,18 @@ fun ProfileScreen(
                 }
 
             },
-            floatingActionButtonPosition = androidx.compose.material.FabPosition.End,
+            floatingActionButtonPosition = FabPosition.End,
             isFloatingActionButtonDocked = true,
-            topBar = {CustomToolbar(navController = navController, viewModel = viewModel, state = state, user = user, imgUser = imgUser)},
+            topBar = {
+                CustomToolbar(
+                    navController = navController,
+                    viewModel = viewModel,
+                    state = state,
+                    user = user,
+                    imgUser = imgUser,
+                    record = record
+                )
+                     },
 
         ) {
             it.calculateTopPadding()
@@ -81,11 +91,12 @@ fun ProfileScreen(
 
 @Composable
 fun CustomToolbar(
-    viewModel: UserViewModel = viewModel(),
+    viewModel: UserViewModel,
     navController: NavController,
     state: CollapsingToolbarScaffoldState,
     user: User?,
-    imgUser: String?
+    imgUser: String?,
+    record: Record?
 ) {
     Column(
         modifier = Modifier
@@ -131,7 +142,11 @@ fun CustomToolbar(
 
                     IconButton(
                         onClick = {
-                            navController.navigate(Screens.UserMain.route)
+                            if (user?.master!!){
+                                navController.navigate(Screens.AdminMain.route)
+                            } else {
+                                navController.navigate(Screens.UserMain.route)
+                            }
                         }
                     ) {
                         Icon(imageVector = Icons.Outlined.ArrowBack, contentDescription = "back to main screen", tint = Purple200)
@@ -148,11 +163,10 @@ fun CustomToolbar(
                         Icon(imageVector = Icons.Outlined.ExitToApp, contentDescription = null, tint = Purple200)
                     }
                 }
-                Log.e("ProfileScreenUser", user.toString())
                 val text = if (textSize.value != 18f) "${user?.firstName} ${user?.lastName}\n${user?.email}" else "${user?.firstName} ${user?.lastName}"
                 Text(
                     text = text,
-                    style = TextStyle(color = Color.White, fontSize = textSize),
+                    style = TextStyle(color = darkWhite, fontSize = textSize),
                     modifier = Modifier
                         .padding(start = 16.dp, top = 10.dp, bottom = 20.dp)
                         .road(
@@ -164,66 +178,148 @@ fun CustomToolbar(
             }
 
         ) {
-
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(color = Color.Transparent)
+                    .fillMaxSize()
+                    .background(color = DefBlack)
+                    .padding(8.dp)
             ) {
+                viewModel.getUser().runCatching {
+                    val master = user?.master!!
 
-                viewModel.getRecord()
-                val record = viewModel.recordList.value
-                val userName = record?.userName
-                val service = record?.service
-                val date = record?.date
-                val time = record?.time
+                    val firstName = user.firstName.orEmpty()
+                    val lastName = user.lastName.orEmpty()
+                    val email = user.email.orEmpty()
+                    val phone = user.phone.orEmpty()
 
-                Text(
-                    text = userName.orEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    color = Color.White
-                )
-                Text(
-                    text = service.orEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    color = Color.White
-                )
-                Text(
-                    text = date.orEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    color = Color.White
-                )
-                Text(
-                    text = time.orEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    color = Color.White
-                )
+                    val fontSize = 18.sp
+                    val color = Purple
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(color = Color.Transparent)
-                ){
-                    items(10){
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                        ) {
-                            Text(
-                                text = "This is settings number $it",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            )
+                    viewModel.getRecord().runCatching {
+                        if (!master && record != null) {
+
+                            val service = record.service
+                            val date = record.date
+                            val time = record.time
+
+                            Card(
+                                backgroundColor = CalendarBack,
+                                border = BorderStroke(0.5.dp, Purple200),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = firstName,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, top = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = lastName,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = email,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = phone,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp, bottom = 16.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Card(
+                                backgroundColor = CalendarBack,
+                                border = BorderStroke(0.5.dp, Purple200),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.background(color = Color.Transparent)
+                                ) {
+                                    Text(
+                                        text = service,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, top = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = date,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = time,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp, bottom = 16.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                }
+                            }
+                        } else {
+                            Card(
+                                backgroundColor = CalendarBack,
+                                border = BorderStroke(0.5.dp, Purple200),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = firstName,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, top = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = lastName,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = email,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                    Text(
+                                        text = phone,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, 8.dp, bottom = 16.dp),
+                                        color = color,
+                                        fontSize = fontSize
+                                    )
+                                }
+                            }
                         }
                     }
                 }

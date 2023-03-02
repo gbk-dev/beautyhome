@@ -73,5 +73,4 @@ class DomainModule {
     fun provideSetTimeScheduleUseCase(timeScheduleRepository: TimeScheduleRepository): SetTimeScheduleUseCase{
         return SetTimeScheduleUseCase(timeScheduleRepository = timeScheduleRepository)
     }
-
 }

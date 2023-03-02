@@ -5,7 +5,6 @@ import com.example.domain.models.User
 import com.example.domain.repository.UserAuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
@@ -24,20 +23,25 @@ class UserAuthRepositoryImpl: UserAuthRepository {
 
         try {
 
-            dbAuth.createUserWithEmailAndPassword(user.email.toString(), password).addOnSuccessListener {
-                signUpSuccess = true
+            dbAuth.createUserWithEmailAndPassword(user.email.toString(), password).addOnCompleteListener {
+                signUpSuccess = it.isSuccessful
             }.await()
 
-            if (signUpSuccess){
+            if (signUpSuccess) {
                 val userId = dbAuth.currentUser?.uid
-                val userDb = User(firstName = user.firstName, lastName = user.lastName, email = user.email, phone = user.phone, uid = userId, master = false)
-                db.reference.child("Users/$userId").setValue(userDb).addOnCompleteListener {
-
-                }.await()
+                val userDb = User(
+                    firstName = user.firstName,
+                    lastName = user.lastName,
+                    email = user.email,
+                    phone = user.phone,
+                    uid = userId,
+                    master = false
+                )
+                db.reference.child("Users/$userId").setValue(userDb).await()
 
                 emit(Resource.Success(true))
 
-            }else{
+            } else {
                 emit(Resource.Failure("Failed to sign up"))
             }
 
@@ -56,7 +60,7 @@ class UserAuthRepositoryImpl: UserAuthRepository {
         try {
 
             dbAuth.signInWithEmailAndPassword(user.email.toString(), password).addOnCompleteListener {
-                signInSuccess = true
+                signInSuccess = it.isSuccessful
             }.await()
 
             if (signInSuccess){
@@ -65,7 +69,7 @@ class UserAuthRepositoryImpl: UserAuthRepository {
                 emit(Resource.Failure("Failed to sign in"))
             }
 
-        }catch (e: Exception){
+        } catch (e: Exception){
             emit(Resource.Failure(e.localizedMessage?: "An unexpected error"))
         }
     }
