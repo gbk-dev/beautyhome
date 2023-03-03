@@ -73,11 +73,16 @@ fun SignInScreen(
             .background(color = DefBlack)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 32.dp, end = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(64.dp))
             TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 value = email.value,
                 onValueChange = {
                     email.value = it
@@ -100,6 +105,9 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(16.dp))
             var passwordVisibility: Boolean by remember { mutableStateOf(false) }
             TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 value = password.value,
                 onValueChange = {
                     password.value = it

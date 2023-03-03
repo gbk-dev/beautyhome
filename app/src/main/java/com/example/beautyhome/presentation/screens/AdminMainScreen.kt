@@ -63,6 +63,10 @@ fun AdminMainScreen(
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
     )
+    viewModel.getUser()
+    viewModel.getRecord()
+    viewModel.getAllRecord()
+    viewModel.getTimeScheduleList()
 
     BottomSheetScaffold(
         scaffoldState = bottomSheetScaffoldState,
@@ -324,15 +328,15 @@ fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Un
             val dateRecord = LocalDate.parse(it.date)
             when (day.position) {
                 DayPosition.MonthDate -> {
-                    if (dateRecord == day.date && !isSelected){
+                    if (dateRecord == day.date && !isSelected) {
                         textColor.value = Purple
                     }
-                    if (dateRecord == day.date && isSelected){
+                    if (dateRecord == day.date && isSelected) {
                         textColor.value = DefBlack
                     }
                 }
                 DayPosition.InDate, DayPosition.OutDate -> {
-                    if (dateRecord == day.date){
+                    if (dateRecord == day.date) {
                         textColor.value = Purple
                     }
                     if (dateRecord != day.date) {

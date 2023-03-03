@@ -7,8 +7,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
@@ -16,24 +14,24 @@ import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.beautyhome.R
 import com.example.beautyhome.presentation.navigation.AuthScreens
-import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.AuthViewModel
 import com.example.beautyhome.presentation.widgets.LoadingScreen
 import com.example.beautyhome.ui.theme.DefBlack
 import com.example.beautyhome.ui.theme.Purple200
-import com.example.beautyhome.ui.theme.Purple500
-import com.example.beautyhome.ui.theme.Shapes
 import com.example.domain.models.Resource
 import com.example.domain.models.User
 
@@ -78,13 +76,20 @@ fun SignUpScreen(
             .background(color = DefBlack)
     ) {
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 32.dp, end = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(64.dp))
                 TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     value = firstName.value,
                     onValueChange = {
                         firstName.value = it
@@ -104,6 +109,9 @@ fun SignUpScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     value = lastName.value,
                     onValueChange = {
                         lastName.value = it
@@ -123,6 +131,9 @@ fun SignUpScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     value = email.value,
                     onValueChange = {
                         email.value = it
@@ -142,28 +153,21 @@ fun SignUpScreen(
                     })
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                TextField(
-                    value = phone.value,
-                    onValueChange = {
+                PhoneField(
+                    phone = phone.value,
+                    mask = "+7 (000)-000-00-00",
+                    maskNumber = '0',
+                    onPhoneChanged = {
                         phone.value = it
                     },
-                    singleLine = true,
-                    label = { Text(text = "Телефон", color = Color.White) },
-                    placeholder = { Text(text = "Введите свой номер телефона") },
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Phone, contentDescription = "Phone Icon") },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        autoCorrect = true,
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(onDone = {
-                        focusManager.clearFocus()
-                    })
+                    focusManager = focusManager
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 var passwordVisibility: Boolean by remember { mutableStateOf(false) }
                 TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     value = password.value,
                     onValueChange = {
                         password.value = it
@@ -197,6 +201,9 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 var confirmPasswordVisibility: Boolean by remember { mutableStateOf(false) }
                 TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     value = confirmPassword.value,
                     onValueChange = {
                         confirmPassword.value = it
@@ -250,7 +257,7 @@ fun SignUpScreen(
                                     firstName = firstName.value,
                                     lastName = lastName.value,
                                     email = email.value,
-                                    phone = phone.value
+                                    phone = "+7${phone.value}"
                                 )
                                 viewModel.signUp(user = user, password = password.value)
                             } else {
@@ -280,4 +287,92 @@ fun SignUpScreen(
         if (stateSignUp == Resource.Loading)
             LoadingScreen()
     }
+}
+
+@Composable
+fun PhoneField(
+    phone: String,
+    modifier: Modifier = Modifier,
+    mask: String = "000 000 00 00",
+    maskNumber: Char = '0',
+    onPhoneChanged: (String) -> Unit,
+    focusManager: FocusManager
+) {
+    TextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        value = phone,
+        onValueChange = { it ->
+            onPhoneChanged(it.take(mask.count { it == maskNumber }))
+        },
+        singleLine = true,
+        label = { Text(text = "Телефон", color = Color.White) },
+        placeholder = { Text(text = "Введите свой номер телефона") },
+        leadingIcon = { Icon(imageVector = Icons.Outlined.Phone, contentDescription = "Phone Icon") },
+        keyboardOptions = KeyboardOptions.Default.copy(
+            capitalization = KeyboardCapitalization.Sentences,
+            autoCorrect = true,
+            keyboardType = KeyboardType.Phone,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(onDone = {
+            focusManager.clearFocus()
+        }),
+        visualTransformation = PhoneVisualTransformation(mask, maskNumber)
+    )
+}
+
+class PhoneVisualTransformation(val mask: String, val maskNumber: Char) : VisualTransformation {
+
+    private val maxLength = mask.count { it == maskNumber }
+
+    override fun filter(text: AnnotatedString): TransformedText {
+        val trimmed = if (text.length > maxLength) text.take(maxLength) else text
+
+        val annotatedString = buildAnnotatedString {
+            if (trimmed.isEmpty()) return@buildAnnotatedString
+
+            var maskIndex = 0
+            var textIndex = 0
+            while (textIndex < trimmed.length && maskIndex < mask.length) {
+                if (mask[maskIndex] != maskNumber) {
+                    val nextDigitIndex = mask.indexOf(maskNumber, maskIndex)
+                    append(mask.substring(maskIndex, nextDigitIndex))
+                    maskIndex = nextDigitIndex
+                }
+                append(trimmed[textIndex++])
+                maskIndex++
+            }
+        }
+
+        return TransformedText(annotatedString, PhoneOffsetMapper(mask, maskNumber))
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PhoneVisualTransformation) return false
+        if (mask != other.mask) return false
+        if (maskNumber != other.maskNumber) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return mask.hashCode()
+    }
+}
+
+private class PhoneOffsetMapper(val mask: String, val numberChar: Char) : OffsetMapping {
+
+    override fun originalToTransformed(offset: Int): Int {
+        var noneDigitCount = 0
+        var i = 0
+        while (i < offset + noneDigitCount) {
+            if (mask[i++] != numberChar) noneDigitCount++
+        }
+        return offset + noneDigitCount
+    }
+
+    override fun transformedToOriginal(offset: Int): Int =
+        offset - mask.take(offset).count { it != numberChar }
 }

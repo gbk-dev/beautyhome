@@ -17,11 +17,12 @@ class RecordRepositoryImpl : RecordRepository {
 
     private val dbAuth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseDatabase = FirebaseDatabase.getInstance()
-    private val uid = dbAuth.currentUser?.uid
     private lateinit var listenerRecords: ValueEventListener
     private lateinit var listenerAllRecords: ValueEventListener
 
     override suspend fun clientRecord(record: Record) {
+
+        val uid = dbAuth.currentUser?.uid
 
         try {
             db.getReference("ActiveRecords/$uid").setValue(record).await()
@@ -32,6 +33,8 @@ class RecordRepositoryImpl : RecordRepository {
     }
 
     override fun getRecords(): Flow<Result<Record>> = callbackFlow{
+
+        val uid = dbAuth.currentUser?.uid
 
         listenerRecords = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

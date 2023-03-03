@@ -60,6 +60,11 @@ fun UserMainScreen(
         firstDayOfWeek = firstDayOfWeek
     )
 
+    viewModel.getUser()
+    viewModel.getRecord()
+    viewModel.getAllRecord()
+    viewModel.getTimeScheduleList()
+
     Column(
         modifier = Modifier
             .background(color = DefBlack)
@@ -290,9 +295,9 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, t
 
     when (day.position) {
         DayPosition.MonthDate -> {
-            if (record != null){
+            if (record != null) {
                 val date = LocalDate.parse(record.date)
-                if (today <= date && date == day.date && !isSelected){
+                if (today <= date && date == day.date && !isSelected) {
                     textColor.value = Purple
                 } else if (today <= date && date == day.date && isSelected) {
                     textColor.value = DefBlack
@@ -307,7 +312,24 @@ fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, t
                 }
             }
         }
-        DayPosition.InDate, DayPosition.OutDate -> textColor.value = Color.Gray
+        DayPosition.InDate, DayPosition.OutDate -> {
+            if (record != null){
+                val date = LocalDate.parse(record.date)
+                if (today <= date && date == day.date && !isSelected) {
+                    textColor.value = Purple
+                } else if (today <= date && date == day.date && isSelected) {
+                    textColor.value = DefBlack
+                } else {
+                    textColor.value = Color.Gray
+                }
+            } else {
+                if (isSelected) {
+                    textColor.value = DefBlack
+                } else {
+                    textColor.value = Color.Gray
+                }
+            }
+        }
     }
 
     Box(
