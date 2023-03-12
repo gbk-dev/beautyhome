@@ -4,7 +4,6 @@
 ## Технологии
 - Kotlin
 - Compose
-- ComposeNavigation
 - Flow
 - Coroutines
 - Firebase(RealtimeDB, MessagingService, Authentication)
