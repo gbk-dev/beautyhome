@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -107,6 +108,62 @@ fun UserMainScreen(
             },
             modifier = Modifier.background(color = CalendarBack)
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Card(
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+            backgroundColor = CalendarBack,
+            border = BorderStroke(0.5.dp, Purple200),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(
+                modifier = Modifier.background(color = Color.Transparent)
+            ) {
+                viewModel.getRecord().runCatching {
+                    val record = viewModel.record.value
+                    if (record != null){
+                        val service = record.service
+                        val date = record.date
+                        val time = record.time
+
+                        val fontSize = 18.sp
+                        val color = Purple
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        service.forEach {
+                            if (it != ""){
+                                Text(
+                                    text = "Услуга - $it",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, 8.dp),
+                                    color = color,
+                                    fontSize = fontSize
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Дата - $date",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, 8.dp),
+                            color = color,
+                            fontSize = fontSize
+                        )
+                        Text(
+                            text = "Время - $time",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, 8.dp, bottom = 16.dp),
+                            color = color,
+                            fontSize = fontSize
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -251,9 +308,9 @@ fun Day(
     timeScheduleList: List<TimeSchedule>,
     record: Record?
 ) {
-    var textDayTime = ""
+    var textDayTime by remember { mutableStateOf("") }
     var isWorkDay = false
-    val textColor = remember { mutableStateOf(darkWhite) }
+    var textColor by remember { mutableStateOf(darkWhite) }
     val today = LocalDate.now()
     if (timeScheduleList.isNotEmpty()){
         timeScheduleList.forEach { timeSchedule ->
@@ -271,36 +328,36 @@ fun Day(
         DayPosition.MonthDate -> {
             if (record != null) {
                 val date = LocalDate.parse(record.date)
-                if (today <= date && date == day.date && !isSelected) {
-                    textColor.value = Purple
+                textColor = if (today <= date && date == day.date && !isSelected) {
+                    Purple
                 } else if (today <= date && date == day.date && isSelected) {
-                    textColor.value = DefBlack
+                    DefBlack
                 } else {
-                    textColor.value = darkWhite
+                    darkWhite
                 }
             } else {
-                if (isSelected) {
-                    textColor.value = DefBlack
+                textColor = if (isSelected) {
+                    DefBlack
                 } else {
-                    textColor.value = darkWhite
+                    darkWhite
                 }
             }
         }
         DayPosition.InDate, DayPosition.OutDate -> {
             if (record != null){
                 val date = LocalDate.parse(record.date)
-                if (today <= date && date == day.date && !isSelected) {
-                    textColor.value = Purple
+                textColor = if (today <= date && date == day.date && !isSelected) {
+                    Purple
                 } else if (today <= date && date == day.date && isSelected) {
-                    textColor.value = DefBlack
+                    DefBlack
                 } else {
-                    textColor.value = Color.Gray
+                    Color.Gray
                 }
             } else {
-                if (isSelected) {
-                    textColor.value = DefBlack
+                textColor = if (isSelected) {
+                    DefBlack
                 } else {
-                    textColor.value = Color.Gray
+                    Color.Gray
                 }
             }
         }
@@ -322,7 +379,7 @@ fun Day(
             ) {
                 Text(
                     text = day.date.dayOfMonth.toString(),
-                    color = textColor.value,
+                    color = textColor,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(8.dp)
                 )
@@ -334,7 +391,7 @@ fun Day(
             ) {
                 Text(
                     text = textDayTime,
-                    color = textColor.value,
+                    color = textColor,
                     fontSize = 10.sp,
                     modifier = Modifier.padding(bottom = 2.dp, end = 2.dp)
                 )
@@ -343,7 +400,7 @@ fun Day(
         } else {
             Text(
                 text = day.date.dayOfMonth.toString(),
-                color = textColor.value,
+                color = textColor,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(8.dp)
             )

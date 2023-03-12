@@ -27,7 +27,6 @@ import com.example.beautyhome.presentation.navigation.AuthScreens
 import com.example.beautyhome.presentation.navigation.Screens
 import com.example.beautyhome.presentation.viewmodel.UserViewModel
 import com.example.beautyhome.ui.theme.*
-import com.example.domain.models.Record
 import com.example.domain.models.User
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.CollapsingToolbarScaffoldState
@@ -43,14 +42,12 @@ fun ProfileScreen(
     BeautyHomeTheme{
         viewModel.getUser()
         viewModel.getImg()
-        viewModel.getRecord()
 
         val state = rememberCollapsingToolbarScaffoldState()
         val scaffoldState = rememberScaffoldState()
 
         val user = viewModel.user.value
         val imgUser = viewModel.img.value
-        val record = viewModel.record.value
 
         Scaffold(
             scaffoldState = scaffoldState,
@@ -78,10 +75,9 @@ fun ProfileScreen(
                     viewModel = viewModel,
                     state = state,
                     user = user,
-                    imgUser = imgUser,
-                    record = record
+                    imgUser = imgUser
                 )
-                     },
+            },
 
         ) {
             it.calculateTopPadding()
@@ -95,8 +91,7 @@ fun CustomToolbar(
     navController: NavController,
     state: CollapsingToolbarScaffoldState,
     user: User?,
-    imgUser: String?,
-    record: Record?
+    imgUser: String?
 ) {
     Column(
         modifier = Modifier
@@ -185,146 +180,54 @@ fun CustomToolbar(
                     .padding(8.dp)
             ) {
                 viewModel.getUser().runCatching {
-                    val master = user?.master!!
 
-                    val firstName = user.firstName.orEmpty()
-                    val lastName = user.lastName.orEmpty()
-                    val email = user.email.orEmpty()
-                    val phone = user.phone.orEmpty()
+                    if (user != null){
+                        val firstName = user.firstName.orEmpty()
+                        val lastName = user.lastName.orEmpty()
+                        val email = user.email.orEmpty()
+                        val phone = user.phone.orEmpty()
 
-                    val fontSize = 18.sp
-                    val color = Purple
+                        val fontSize = 18.sp
+                        val color = Purple
 
-                    viewModel.getRecord().runCatching {
-                        if (!master && record != null) {
-
-                            val service = record.service
-                            val date = record.date
-                            val time = record.time
-
-                            Card(
-                                backgroundColor = CalendarBack,
-                                border = BorderStroke(0.5.dp, Purple200),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Column {
-                                    Text(
-                                        text = firstName,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, top = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = lastName,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = email,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = phone,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp, bottom = 16.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Card(
-                                backgroundColor = CalendarBack,
-                                border = BorderStroke(0.5.dp, Purple200),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.background(color = Color.Transparent)
-                                ) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    service.forEach {
-                                        if (it != ""){
-                                            Text(
-                                                text = "Услуга - $it",
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(start = 16.dp, 8.dp),
-                                                color = color,
-                                                fontSize = fontSize
-                                            )
-                                        }
-                                    }
-
-                                    Text(
-                                        text = "Дата - $date",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = "Время - $time",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp, bottom = 16.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                }
-                            }
-                        } else {
-                            Card(
-                                backgroundColor = CalendarBack,
-                                border = BorderStroke(0.5.dp, Purple200),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Column {
-                                    Text(
-                                        text = firstName,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, top = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = lastName,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = email,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = phone,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, 8.dp, bottom = 16.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                }
+                        Card(
+                            backgroundColor = CalendarBack,
+                            border = BorderStroke(0.5.dp, Purple200),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = firstName,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, top = 16.dp, 8.dp),
+                                    color = color,
+                                    fontSize = fontSize
+                                )
+                                Text(
+                                    text = lastName,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, 8.dp),
+                                    color = color,
+                                    fontSize = fontSize
+                                )
+                                Text(
+                                    text = email,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, 8.dp),
+                                    color = color,
+                                    fontSize = fontSize
+                                )
+                                Text(
+                                    text = phone,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, 8.dp, bottom = 16.dp),
+                                    color = color,
+                                    fontSize = fontSize
+                                )
                             }
                         }
                     }

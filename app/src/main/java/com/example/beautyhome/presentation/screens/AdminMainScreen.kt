@@ -305,11 +305,16 @@ fun AdminTopBar(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, recordsList: List<Record>, timeScheduleList: List<TimeSchedule>) {
+fun AdminDay(
+    day: CalendarDay,
+    isSelected: Boolean,
+    onClick: (CalendarDay) -> Unit,
+    recordsList: List<Record>,
+    timeScheduleList: List<TimeSchedule>) {
 
-    var textDayTime = ""
+    var textDayTime by remember { mutableStateOf("") }
     var isWorkDay = false
-    val textColor = remember { mutableStateOf(darkWhite) }
+    var textColor by remember { mutableStateOf(darkWhite) }
 
     if (timeScheduleList.isNotEmpty()){
         timeScheduleList.forEach {
@@ -329,18 +334,18 @@ fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Un
             when (day.position) {
                 DayPosition.MonthDate -> {
                     if (dateRecord == day.date && !isSelected) {
-                        textColor.value = Purple
+                        textColor = Purple
                     }
                     if (dateRecord == day.date && isSelected) {
-                        textColor.value = DefBlack
+                        textColor = DefBlack
                     }
                 }
                 DayPosition.InDate, DayPosition.OutDate -> {
                     if (dateRecord == day.date) {
-                        textColor.value = Purple
+                        textColor = Purple
                     }
                     if (dateRecord != day.date) {
-                        textColor.value = Color.Gray
+                        textColor = Color.Gray
                     }
                 }
             }
@@ -369,7 +374,7 @@ fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Un
             ) {
                 Text(
                     text = day.date.dayOfMonth.toString(),
-                    color = textColor.value,
+                    color = textColor,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(8.dp)
                 )
@@ -381,7 +386,7 @@ fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Un
             ) {
                 Text(
                     text = textDayTime,
-                    color = textColor.value,
+                    color = textColor,
                     fontSize = 10.sp,
                     modifier = Modifier.padding(bottom = 2.dp, end = 2.dp)
                 )
@@ -390,13 +395,12 @@ fun AdminDay(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Un
         } else {
             Text(
                 text = day.date.dayOfMonth.toString(),
-                color = textColor.value,
+                color = textColor,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(8.dp)
             )
         }
     }
-
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

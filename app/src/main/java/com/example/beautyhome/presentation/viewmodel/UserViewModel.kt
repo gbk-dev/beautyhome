@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.domain.models.Record
 import com.example.domain.models.User
 import com.example.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +14,6 @@ import javax.inject.Inject
 @HiltViewModel
 class UserViewModel @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
-    private val getRecordUseCase: GetRecordUseCase,
     private val uploadImgUseCase: UploadImgUseCase,
     private val getImgUserUseCase: GetImgUserUseCase,
     private val signOutUseCase: SignOutUseCase
@@ -24,11 +22,6 @@ class UserViewModel @Inject constructor(
     private val _user = MutableLiveData<User>()
     val user : LiveData<User> by lazy {
         _user
-    }
-
-    private val _record = MutableLiveData<Record>()
-    val record : LiveData<Record> by lazy {
-        _record
     }
 
     private val _img = MutableLiveData<String>()
@@ -45,22 +38,6 @@ class UserViewModel @Inject constructor(
                         _user.postValue(getUserList!!)
                     }
 
-                    it.isFailure -> {
-                        it.exceptionOrNull()?.printStackTrace()
-                    }
-                }
-            }
-        }
-    }
-
-    fun getRecord(){
-        viewModelScope.launch(Dispatchers.IO) {
-            getRecordUseCase.getRecord().collect{
-                when{
-                    it.isSuccess -> {
-                        val getRecordList = it.getOrNull()
-                        _record.postValue(getRecordList!!)
-                    }
                     it.isFailure -> {
                         it.exceptionOrNull()?.printStackTrace()
                     }
