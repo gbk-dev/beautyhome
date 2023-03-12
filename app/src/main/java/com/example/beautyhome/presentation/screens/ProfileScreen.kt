@@ -253,16 +253,22 @@ fun CustomToolbar(
                                 Column(
                                     modifier = Modifier.background(color = Color.Transparent)
                                 ) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    service.forEach {
+                                        if (it != ""){
+                                            Text(
+                                                text = "Услуга - $it",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(start = 16.dp, 8.dp),
+                                                color = color,
+                                                fontSize = fontSize
+                                            )
+                                        }
+                                    }
+
                                     Text(
-                                        text = service,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, top = 16.dp, 8.dp),
-                                        color = color,
-                                        fontSize = fontSize
-                                    )
-                                    Text(
-                                        text = date,
+                                        text = "Дата - $date",
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(start = 16.dp, 8.dp),
@@ -270,7 +276,7 @@ fun CustomToolbar(
                                         fontSize = fontSize
                                     )
                                     Text(
-                                        text = time,
+                                        text = "Время - $time",
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(start = 16.dp, 8.dp, bottom = 16.dp),

@@ -18,8 +18,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val signUpUseCase: SignUpUseCase,
     private val signInUseCase: SignInUseCase,
-    private val getUserUseCase: GetUserUseCase,
-    loginUseCase: LoginUseCase
+    private val getUserUseCase: GetUserUseCase
 ) : ViewModel() {
 
     private val _user = MutableLiveData<User>()
@@ -36,8 +35,6 @@ class AuthViewModel @Inject constructor(
     val signIn: State<Resource<Boolean>> by lazy {
         _signInState
     }
-
-    val login = loginUseCase.login()
 
     fun getUser(){
         viewModelScope.launch(Dispatchers.IO) {

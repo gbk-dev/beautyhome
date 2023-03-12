@@ -1,6 +1,7 @@
 package com.example.beautyhome.presentation.screens
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -31,11 +32,8 @@ import java.util.*
 import com.example.beautyhome.ui.theme.*
 import com.example.domain.models.Record
 import com.example.domain.models.TimeSchedule
-import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.*
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
-import com.vanpra.composematerialdialogs.listItemsSingleChoice
-import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import com.vanpra.composematerialdialogs.title
 import java.time.*
 import java.time.format.DateTimeFormatter
 
@@ -135,12 +133,10 @@ fun TopBar(
             Icon(imageVector = Icons.Outlined.Person, contentDescription = "profile", tint = Purple200)
             Text(text = "Профиль", color = Purple200)
         }
-        
+
         Spacer(Modifier.weight(1f, true))
 
-        var pickedTime by remember {
-            mutableStateOf(LocalTime.NOON)
-        }
+        val pickedTimeList = remember { mutableStateOf(mutableListOf(LocalTime.NOON)) }
 
         val timeDialogState = rememberMaterialDialogState()
         val serviceDialogState = rememberMaterialDialogState()
@@ -155,7 +151,12 @@ fun TopBar(
             }
         }
         viewModel.getUser()
-        val service = remember { mutableStateOf("") }
+
+        val service = remember { mutableStateOf(mutableListOf("")) }
+        val listService : List<String> = service.value
+        val listTimeMut: MutableList<String> = mutableListOf()
+        val listTime: List<String> = listTimeMut
+
         MaterialDialog(
             dialogState = serviceDialogState,
             buttons = {
@@ -166,17 +167,26 @@ fun TopBar(
                     if (timeDialogState.showing){
                         timeDialogState.hide()
                     }
+                    service.value.clear()
+                    pickedTimeList.value.clear()
                 }
             }
         ) {
+            val serviceList = listOf("Брови", "Ресницы", "Ногти")
             title(text = "Выберите услугу")
-            listItemsSingleChoice(
-                list = listOf("Брови", "Ресницы", "Ногти"),
-            ) {
-                when (it) {
-                    0 -> service.value = "Брови"
-                    1 -> service.value = "Ресницы"
-                    2 -> service.value = "Ногти"
+            listItemsMultiChoice(
+                list = serviceList,
+            ) { listPressed ->
+                service.value.clear()
+                listPressed.forEach {
+                    service.value.add(serviceList[it])
+                }
+
+            }
+
+            service.value.forEach {
+                if (it == ""){
+                    service.value.remove(it)
                 }
             }
         }
@@ -186,59 +196,15 @@ fun TopBar(
             dialogState = timeDialogState,
             buttons = {
                 positiveButton(text = "Ok") {
-                    val user = viewModel.user.value
-                    val today = LocalDate.now()
-                    val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
-                    val activeRecordList = viewModel.allRecordList.value.orEmpty()
-                    if (timeScheduleList.isNotEmpty()){
-                        timeScheduleList.forEach { timeSchedule ->
-                            val date = LocalDate.parse(timeSchedule.date)
-                            if (selectedDate != null){
-                                if (date == selectedDate){
-                                    timeSchedule.time.forEach { timeScheduleTime ->
-                                        if (timeScheduleTime == pickedTime.toString()){
-                                            if (activeRecordList.isNotEmpty()){
-                                                activeRecordList.forEach { activeRecords ->
-                                                    val activeDate = LocalDate.parse(activeRecords.date)
-                                                    if (activeDate == date && activeRecords.time == pickedTime.toString()){
-                                                        Toast.makeText(context, "Это время уже занято", Toast.LENGTH_SHORT).show()
-                                                    } else {
-                                                        val record = Record(
-                                                            date = selectedDate.toString(),
-                                                            time = pickedTime.toString(),
-                                                            service = service.value,
-                                                            userName = "${user?.firstName} ${user?.lastName}",
-                                                            phone = user?.phone!!
-                                                        )
-                                                        if (selectedDate > today){
-                                                            viewModel.clientRecord(record = record)
-                                                            Toast.makeText(context, "Вы записались на дату ${record.date} в ${record.time}", Toast.LENGTH_SHORT).show()
-                                                        } else {
-                                                            Toast.makeText(context, "На этот день уже нельзя записаться", Toast.LENGTH_SHORT).show()
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                val record = Record(
-                                                    date = selectedDate.toString(),
-                                                    time = pickedTime.toString(),
-                                                    service = service.value,
-                                                    userName = "${user?.firstName} ${user?.lastName}",
-                                                    phone = user?.phone!!
-                                                )
-                                                if (selectedDate > today){
-                                                    viewModel.clientRecord(record = record)
-                                                    Toast.makeText(context, "Вы записались на дату ${record.date} в ${record.time}", Toast.LENGTH_SHORT).show()
-                                                } else {
-                                                    Toast.makeText(context, "На этот день уже нельзя записаться", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    setRecord(
+                        viewModel = viewModel,
+                        selectedDate = selectedDate,
+                        pickedTimeList = pickedTimeList,
+                        context = context,
+                        listService = listService,
+                        listTime = listTime,
+                        listTimeMut = listTimeMut
+                    )
                 }
                 negativeButton(text = "Cancel")
             }
@@ -256,7 +222,7 @@ fun TopBar(
                     }
                 }
             }
-            if (startTime.value == "" && endTime.value == ""){
+            if (startTime.value == "" && endTime.value == "") {
                 Toast.makeText(context, "Не рабочий день", Toast.LENGTH_SHORT).show()
             } else {
                 val startTimeFormat = LocalTime.parse(startTime.value, DateTimeFormatter.ofPattern("HH:mm"))
@@ -267,7 +233,9 @@ fun TopBar(
                     is24HourClock = true,
                     timeRange = range
                 ) {
-                    pickedTime = it
+                    pickedTimeList.value.clear()
+                    listTimeMut.clear()
+                    pickedTimeList.value.add(it)
                 }
             }
         }
@@ -276,7 +244,13 @@ fun TopBar(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Day(day: CalendarDay, isSelected: Boolean, onClick: (CalendarDay) -> Unit, timeScheduleList: List<TimeSchedule>, record: Record?) {
+fun Day(
+    day: CalendarDay,
+    isSelected: Boolean,
+    onClick: (CalendarDay) -> Unit,
+    timeScheduleList: List<TimeSchedule>,
+    record: Record?
+) {
     var textDayTime = ""
     var isWorkDay = false
     val textColor = remember { mutableStateOf(darkWhite) }
@@ -417,5 +391,84 @@ fun MonthHeader(month: CalendarMonth, year: Year, onClick: (YearMonth) -> Unit) 
         }) {
             Icon(imageVector = rightArrow, contentDescription = null, tint = Purple200)
         }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun setRecord(viewModel: RecordViewModel, selectedDate: LocalDate?, pickedTimeList : MutableState<MutableList<LocalTime>>, context: Context, listService: List<String>, listTime: List<String>, listTimeMut: MutableList<String>){
+    val user = viewModel.user.value
+    val today = LocalDate.now()
+    val timeScheduleList = viewModel.timeScheduleList.value.orEmpty()
+    val activeRecordList = viewModel.allRecordList.value.orEmpty()
+    if (timeScheduleList.isNotEmpty()){
+        timeScheduleList.forEach { timeSchedule ->
+            val date = LocalDate.parse(timeSchedule.date)
+            if (selectedDate != null){
+                if (date == selectedDate){
+                    timeSchedule.time.forEach { timeScheduleTime ->
+                        pickedTimeList.value.forEach { pickedTime ->
+                            if (timeScheduleTime == pickedTime.toString()) {
+                                if (activeRecordList.isNotEmpty()){
+                                    activeRecordList.forEach { activeRecords ->
+                                        val activeDate = LocalDate.parse(activeRecords.date)
+                                        if (activeDate == date && activeRecords.time == listOf(pickedTime.toString())){
+                                            Toast.makeText(context, "Это время уже занято", Toast.LENGTH_SHORT).show()
+                                        } else {
+
+                                            listTimeMut.clear()
+
+                                            for (i in listService.indices) {
+                                                if (i < listService.size){
+                                                    listTimeMut.add(pickedTime.plusHours(i.toLong()).toString())
+                                                }
+                                            }
+
+                                            val date1 = LocalTime.parse(listTime.last())
+                                            val date2 = LocalTime.parse(timeSchedule.time.last())
+
+                                            if (date1 <= date2) {
+                                                val record = Record(
+                                                    date = selectedDate.toString(),
+                                                    time = listTime,
+                                                    service = listService,
+                                                    userName = "${user?.firstName} ${user?.lastName}",
+                                                    phone = user?.phone!!
+                                                )
+                                                if (selectedDate > today){
+                                                    viewModel.clientRecord(record = record).runCatching {
+                                                        Toast.makeText(context, "Вы записались на дату ${record.date} в ${record.time}", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                } else {
+                                                    Toast.makeText(context, "На этот день уже нельзя записаться", Toast.LENGTH_SHORT).show()
+                                                }
+                                            } else {
+                                                Toast.makeText(context, "12331313313", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    val record = Record(
+                                        date = selectedDate.toString(),
+                                        time = listTimeMut,
+                                        service = listService,
+                                        userName = "${user?.firstName} ${user?.lastName}",
+                                        phone = user?.phone!!
+                                    )
+                                    if (selectedDate > today){
+                                        viewModel.clientRecord(record = record).runCatching {
+                                            Toast.makeText(context, "Вы записались на дату ${record.date} в ${record.time}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "На этот день уже нельзя записаться", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        Toast.makeText(context, "Нерабочий день", Toast.LENGTH_SHORT).show()
     }
 }
